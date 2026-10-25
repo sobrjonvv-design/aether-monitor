@@ -32,8 +32,7 @@
                 android:fontFamily="monospace"
                 android:text="AETHER // SYS.01"
                 android:textColor="@color/gray_light"
-                android:textSize="10sp"
-                android:letterSpacing="0.08" />
+                android:textSize="10sp" />
         </LinearLayout>
 
         <TextView
@@ -48,8 +47,8 @@
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <!-- 1px Thin Divider -->
-    <View
+    <!-- 1px Thin Divider (ImageView is 100% supported by RemoteViews, unlike View) -->
+    <ImageView
         android:layout_width="match_parent"
         android:layout_height="1dp"
         android:layout_marginTop="8dp"
