@@ -4,6 +4,7 @@ import android.app.ActivityManager
 import android.app.PendingIntent
 import android.appwidget.AppWidgetManager
 import android.appwidget.AppWidgetProvider
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
@@ -16,6 +17,7 @@ import android.graphics.RectF
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.BatteryManager
+import android.os.Build
 import android.widget.RemoteViews
 import com.aether.monitor.MainActivity
 import com.aether.monitor.R
@@ -26,7 +28,8 @@ import kotlin.math.*
 
 /**
  * AETHER // Native Android Home Screen Widget Provider (4x2 / 4x4 / 2x2)
- * Features Real-Time OLED Noir Game Graphics Engine & System Telemetry
+ * Features Real-Time OLED Noir Animation Engine (Solar Systems & Lightning)
+ * With Speed Control (0.5X - 4.0X) and OLED Anti-Burn-In Pixel-Shifting
  */
 class AetherWidgetProvider : AppWidgetProvider() {
 
@@ -35,6 +38,9 @@ class AetherWidgetProvider : AppWidgetProvider() {
         appWidgetManager: AppWidgetManager,
         appWidgetIds: IntArray
     ) {
+        val prefs = context.getSharedPreferences("aether_prefs", Context.MODE_PRIVATE)
+        val pinnedZenId = prefs.getInt("pinned_zen_id", 14)
+
         for (appWidgetId in appWidgetIds) {
             try {
                 updateAppWidget(context, appWidgetManager, appWidgetId)
@@ -42,17 +48,42 @@ class AetherWidgetProvider : AppWidgetProvider() {
                 e.printStackTrace()
             }
         }
+
+        // Start live animation engine if user selected an animated game
+        if (isAnimatedGame(pinnedZenId)) {
+            startAnimationService(context)
+        }
     }
 
     override fun onReceive(context: Context, intent: Intent) {
         super.onReceive(context, intent)
         try {
-            val appWidgetManager = AppWidgetManager.getInstance(context)
-            val ids = appWidgetManager.getAppWidgetIds(
-                android.content.ComponentName(context, AetherWidgetProvider::class.java)
-            )
-            for (id in ids) {
-                updateAppWidget(context, appWidgetManager, id)
+            if (intent.action == ACTION_CYCLE_SPEED) {
+                val prefs = context.getSharedPreferences("aether_prefs", Context.MODE_PRIVATE)
+                val currentSpeed = prefs.getFloat("widget_speed", 1.0f)
+                val nextSpeed = when {
+                    currentSpeed < 0.8f -> 1.0f
+                    currentSpeed < 1.5f -> 2.0f
+                    currentSpeed < 3.0f -> 4.0f
+                    else -> 0.5f
+                }
+                prefs.edit().putFloat("widget_speed", nextSpeed).apply()
+
+                val appWidgetManager = AppWidgetManager.getInstance(context)
+                val ids = appWidgetManager.getAppWidgetIds(
+                    ComponentName(context, AetherWidgetProvider::class.java)
+                )
+                for (id in ids) {
+                    updateAppWidget(context, appWidgetManager, id)
+                }
+            } else {
+                val appWidgetManager = AppWidgetManager.getInstance(context)
+                val ids = appWidgetManager.getAppWidgetIds(
+                    ComponentName(context, AetherWidgetProvider::class.java)
+                )
+                for (id in ids) {
+                    updateAppWidget(context, appWidgetManager, id)
+                }
             }
         } catch (e: Exception) {
             e.printStackTrace()
@@ -60,6 +91,29 @@ class AetherWidgetProvider : AppWidgetProvider() {
     }
 
     companion object {
+        const val ACTION_CYCLE_SPEED = "com.aether.monitor.ACTION_CYCLE_SPEED"
+
+        /**
+         * Checks if the game has live continuous animation (Solar Systems & Lightning)
+         * All other games display the static Nothing OS emblem as requested.
+         */
+        fun isAnimatedGame(gameId: Int): Boolean {
+            return gameId == 14 || gameId == 13 || gameId == 16 || gameId == 11
+        }
+
+        fun startAnimationService(context: Context) {
+            try {
+                val serviceIntent = Intent(context, AetherAnimationService::class.java)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(serviceIntent)
+                } else {
+                    context.startService(serviceIntent)
+                }
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
+
         fun updateAppWidget(
             context: Context,
             appWidgetManager: AppWidgetManager,
@@ -134,24 +188,48 @@ class AetherWidgetProvider : AppWidgetProvider() {
 
             // 5. Active Pinned Zen Game Info
             val prefs = context.getSharedPreferences("aether_prefs", Context.MODE_PRIVATE)
-            val pinnedZenId = prefs.getInt("pinned_zen_id", 13)
-            val pinnedZenName = prefs.getString("pinned_zen_name", "Event Horizon Vortex")
+            val pinnedZenId = prefs.getInt("pinned_zen_id", 14)
+            val pinnedZenName = prefs.getString("pinned_zen_name", "Solar System Gravity")
+            val speed = prefs.getFloat("widget_speed", 1.0f)
 
             views.setTextViewText(
                 R.id.widget_footer,
                 "▶ ZEN #${String.format("%02d", pinnedZenId)}: ${pinnedZenName?.uppercase()} [ИГРАТЬ]"
             )
 
-            // 6. Real-Time Procedural Game Graphic Rendering
+            // Speed Control Button (Visible on animated games)
+            if (isAnimatedGame(pinnedZenId)) {
+                views.setViewVisibility(R.id.widget_speed_btn, android.view.View.VISIBLE)
+                views.setTextViewText(R.id.widget_speed_btn, "⚡ ${String.format(Locale.US, "%.1fX", speed)}")
+
+                val speedIntent = Intent(context, AetherWidgetProvider::class.java).apply {
+                    action = ACTION_CYCLE_SPEED
+                }
+                val piSpeed = PendingIntent.getBroadcast(
+                    context,
+                    888,
+                    speedIntent,
+                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                )
+                views.setOnClickPendingIntent(R.id.widget_speed_btn, piSpeed)
+            } else {
+                views.setViewVisibility(R.id.widget_speed_btn, android.view.View.GONE)
+            }
+
+            // 6. Real-Time Procedural Game Graphic Rendering (OLED Anti-Burn-In)
             try {
                 val bw = 600
                 val bh = 380
-                val bitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
+                val bitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.RGB_565)
                 val canvas = Canvas(bitmap)
                 canvas.drawColor(Color.BLACK)
 
                 val t = System.currentTimeMillis() / 1000.0
-                renderGameVisual(canvas, bw, bh, pinnedZenId, t)
+                if (isAnimatedGame(pinnedZenId)) {
+                    renderAnimatedGame(canvas, bw, bh, pinnedZenId, t, speed)
+                } else {
+                    drawStaticEmblem(canvas, bw, bh, pinnedZenId, pinnedZenName ?: "Zen Mode")
+                }
 
                 views.setImageViewBitmap(R.id.widget_game_canvas, bitmap)
             } catch (e: Exception) {
@@ -172,6 +250,7 @@ class AetherWidgetProvider : AppWidgetProvider() {
                 )
                 views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
                 views.setOnClickPendingIntent(R.id.widget_game_canvas, pendingIntent)
+                views.setOnClickPendingIntent(R.id.widget_footer, pendingIntent)
             } catch (e: Exception) {
                 e.printStackTrace()
             }
@@ -180,526 +259,268 @@ class AetherWidgetProvider : AppWidgetProvider() {
             appWidgetManager.updateAppWidget(appWidgetId, views)
         }
 
-        /**
-         * Procedural OLED Monochrome Renderers for all 16 Zen games
-         */
-        private fun renderGameVisual(canvas: Canvas, w: Int, h: Int, gameId: Int, t: Double) {
+        private fun renderAnimatedGame(canvas: Canvas, w: Int, h: Int, gameId: Int, t: Double, speed: Float) {
             when (gameId) {
-                13 -> drawEventHorizon(canvas, w, h, t)
-                14 -> drawSolarSystem(canvas, w, h, t)
-                1 -> drawKineticSand(canvas, w, h, t)
-                2 -> drawBonsai(canvas, w, h, t)
-                3 -> drawLiquidMercury(canvas, w, h, t)
-                4 -> drawClicker(canvas, w, h, t)
-                5 -> drawOrbitalSlingshot(canvas, w, h, t)
-                6 -> drawMagneticFilings(canvas, w, h, t)
-                7 -> drawKaleido(canvas, w, h, t)
-                8 -> drawConstellations(canvas, w, h, t)
-                9 -> drawMorseTelegraph(canvas, w, h, t)
-                10 -> drawPhotonCloud(canvas, w, h, t)
-                11 -> drawMycelium(canvas, w, h, t)
-                12 -> drawNeuralWeb(canvas, w, h, t)
-                15 -> drawSpacetimeFabric(canvas, w, h, t)
-                16 -> drawNixieTube(canvas, w, h, t)
-                else -> drawEventHorizon(canvas, w, h, t)
+                14 -> drawSolarSystem(canvas, w, h, t, speed)
+                13 -> drawEventHorizon(canvas, w, h, t, speed)
+                16, 11 -> drawTeslaLightning(canvas, w, h, t, speed)
+                else -> drawSolarSystem(canvas, w, h, t, speed)
             }
         }
 
-        // #13: EVENT HORIZON VORTEX (Black Hole & Relativistic Accretion Disk)
-        private fun drawEventHorizon(canvas: Canvas, w: Int, h: Int, t: Double) {
+        // #14: SOLAR SYSTEM GRAVITY (OLED Anti-Burn-In & Keplerian Orbit Animation)
+        private fun drawSolarSystem(canvas: Canvas, w: Int, h: Int, t: Double, speed: Float) {
             val cx = w / 2f
             val cy = h / 2f
             val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
+            // Anti-burn-in sub-pixel Lissajous orbit shift
+            val shiftX = (sin(t * 0.04) * 3.5f).toFloat()
+            val shiftY = (cos(t * 0.03) * 3.5f).toFloat()
+            val scx = cx + shiftX
+            val scy = cy + shiftY
+
+            // Central Sun with gentle corona pulse
+            val sunPulse = (sin(t * speed * 2.0) * 1.5f).toFloat()
+            paint.style = Paint.Style.FILL
+            paint.color = Color.WHITE
+            paint.alpha = 230
+            canvas.drawCircle(scx, scy, 13f + sunPulse, paint)
+
+            paint.style = Paint.Style.STROKE
+            paint.alpha = 60
+            paint.strokeWidth = 1.5f
+            canvas.drawCircle(scx, scy, 18f + sunPulse, paint)
+
+            // 8 Planets: (orbital radius, planet radius, speed factor)
+            val planets = listOf(
+                Triple(35f, 2.2f, 4.1),   // Mercury
+                Triple(52f, 3.2f, 2.6),   // Venus
+                Triple(74f, 3.6f, 1.9),   // Earth (with Moon)
+                Triple(95f, 2.8f, 1.4),   // Mars
+                Triple(135f, 7.5f, 0.7),  // Jupiter
+                Triple(175f, 6.2f, 0.5),  // Saturn (with Rings)
+                Triple(215f, 4.5f, 0.35), // Uranus
+                Triple(250f, 4.2f, 0.25)  // Neptune
+            )
+
+            paint.style = Paint.Style.STROKE
+            for ((r, size, spdFactor) in planets) {
+                if (r > w / 2f) continue
+                // Orbit line (dim anti-burn-in)
+                paint.color = Color.WHITE
+                paint.alpha = 35
+                paint.strokeWidth = 1f
+                canvas.drawCircle(scx, scy, r, paint)
+
+                // Keplerian angular speed adjusted by user speed multiplier
+                val angle = (t * speed * spdFactor * 0.6 + r * 1.7) % (2 * PI)
+                val px = scx + (r * cos(angle)).toFloat()
+                val py = scy + (r * sin(angle)).toFloat()
+
+                paint.style = Paint.Style.FILL
+                paint.alpha = 230
+                canvas.drawCircle(px, py, size, paint)
+
+                // Earth's orbiting Moon
+                if (r == 74f) {
+                    val moonAngle = (t * speed * 7.0) % (2 * PI)
+                    val mx = px + (7f * cos(moonAngle)).toFloat()
+                    val my = py + (7f * sin(moonAngle)).toFloat()
+                    paint.alpha = 180
+                    canvas.drawCircle(mx, my, 1.2f, paint)
+                }
+
+                // Saturn's tilted rings
+                if (r == 175f) {
+                    paint.style = Paint.Style.STROKE
+                    paint.alpha = 160
+                    paint.strokeWidth = 1.5f
+                    canvas.drawOval(RectF(px - 11f, py - 4.5f, px + 11f, py + 4.5f), paint)
+                }
+            }
+
+            // Asteroid belt (dots between Mars and Jupiter: r = 110f..120f)
+            paint.style = Paint.Style.FILL
+            paint.color = Color.WHITE
+            for (i in 0 until 45) {
+                val rAst = 110f + ((i * 13) % 15)
+                val aAst = (i * 0.14 + t * speed * 0.15) % (2 * PI)
+                val ax = scx + (rAst * cos(aAst)).toFloat()
+                val ay = scy + (rAst * sin(aAst)).toFloat()
+                paint.alpha = (50 + (i % 80)).coerceIn(40, 150)
+                canvas.drawCircle(ax, ay, 1.2f, paint)
+            }
+        }
+
+        // #13: EVENT HORIZON VORTEX (Cosmic Singularity & Relativistic Swirl)
+        private fun drawEventHorizon(canvas: Canvas, w: Int, h: Int, t: Double, speed: Float) {
+            val cx = w / 2f
+            val cy = h / 2f
+            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
+            val shiftX = (sin(t * 0.05) * 3f).toFloat()
+            val shiftY = (cos(t * 0.04) * 3f).toFloat()
+            val scx = cx + shiftX
+            val scy = cy + shiftY
+
             // Accretion disk rings
             paint.style = Paint.Style.STROKE
             for (i in 1..7) {
-                val rx = 55f + i * 26f
+                val rx = 52f + i * 26f
                 val ry = rx * 0.36f
                 paint.color = Color.WHITE
-                paint.alpha = (35 + i * 20).coerceIn(20, 240)
+                paint.alpha = (30 + i * 18).coerceIn(20, 200)
                 paint.strokeWidth = 1.2f
                 canvas.save()
-                canvas.rotate(-18f, cx, cy)
-                canvas.drawOval(RectF(cx - rx, cy - ry, cx + rx, cy + ry), paint)
+                canvas.rotate(-18f, scx, scy)
+                canvas.drawOval(RectF(scx - rx, scy - ry, scx + rx, scy + ry), paint)
                 canvas.restore()
             }
 
-            // 150 Swirling relativistic stars
+            // 160 Swirling relativistic stars
             paint.style = Paint.Style.FILL
-            val starCount = 150
+            val starCount = 160
             for (i in 0 until starCount) {
-                val baseR = 48f + ((i * 19) % 180)
-                val speed = 2.6 / sqrt(baseR.toDouble())
-                val angle = (i * (2 * PI / starCount) * 5 + t * speed) % (2 * PI)
-                val sx = cx + (baseR * cos(angle)).toFloat()
-                val sy = cy + (baseR * 0.38f * sin(angle)).toFloat() - (sin(angle) * 10f).toFloat()
+                val baseR = 46f + ((i * 19) % 185)
+                val angularSpeed = (3.2 / sqrt(baseR.toDouble())) * speed
+                val angle = (i * (2 * PI / starCount) * 5 + t * angularSpeed) % (2 * PI)
+                val sx = scx + (baseR * cos(angle)).toFloat()
+                val sy = scy + (baseR * 0.38f * sin(angle)).toFloat() - (sin(angle) * 10f).toFloat()
 
-                val brightness = ((sin(angle + t * 1.5) + 1.2) / 2.2 * 255).toInt().coerceIn(50, 255)
+                // Relativistic Doppler beaming
+                val doppler = ((sin(angle) + 1.2) / 2.2).coerceIn(0.2, 1.0)
+                val brightness = (doppler * 220).toInt().coerceIn(40, 230)
                 paint.color = Color.WHITE
                 paint.alpha = brightness
-                val starSize = if (i % 6 == 0) 2.5f else 1.5f
+                val starSize = if (i % 7 == 0) 2.4f else 1.4f
                 canvas.drawCircle(sx, sy, starSize, paint)
             }
 
             // Black Hole Singularity Core
             paint.style = Paint.Style.FILL
             paint.color = Color.BLACK
-            canvas.drawCircle(cx, cy, 38f, paint)
+            canvas.drawCircle(scx, scy, 38f, paint)
 
-            // Glowing Event Horizon Rim
+            // Glowing Event Horizon Rim (Anti-burn-in pulse)
+            val rimPulse = (sin(t * speed * 2.5) * 1.5f).toFloat()
             paint.style = Paint.Style.STROKE
             paint.color = Color.WHITE
-            paint.alpha = 245
-            paint.strokeWidth = 2.4f
-            canvas.drawCircle(cx, cy, 38f, paint)
+            paint.alpha = 230
+            paint.strokeWidth = 2.2f
+            canvas.drawCircle(scx, scy, 38f + rimPulse, paint)
 
-            paint.alpha = 90
-            paint.strokeWidth = 6.0f
-            canvas.drawCircle(cx, cy, 41f, paint)
+            paint.alpha = 70
+            paint.strokeWidth = 5.0f
+            canvas.drawCircle(scx, scy, 41f + rimPulse, paint)
         }
 
-        // #14: SOLAR SYSTEM GRAVITY
-        private fun drawSolarSystem(canvas: Canvas, w: Int, h: Int, t: Double) {
+        // #16 / #11: TESLA & ATMOSPHERIC LIGHTNING ARC
+        private fun drawTeslaLightning(canvas: Canvas, w: Int, h: Int, t: Double, speed: Float) {
             val cx = w / 2f
             val cy = h / 2f
             val paint = Paint(Paint.ANTI_ALIAS_FLAG)
 
-            // Sun in center
-            paint.style = Paint.Style.FILL
-            paint.color = Color.WHITE
-            paint.alpha = 255
-            canvas.drawCircle(cx, cy, 14f, paint)
+            // OLED Anti-burn-in subpixel shifting
+            val shiftX = (sin(t * 0.05) * 3f).toFloat()
+            val shiftY = (cos(t * 0.04) * 3f).toFloat()
 
-            paint.style = Paint.Style.STROKE
-            paint.alpha = 90
-            paint.strokeWidth = 2f
-            canvas.drawCircle(cx, cy, 19f, paint)
-
-            val planets = listOf(
-                Pair(35f, 2.2f), Pair(52f, 3.2f), Pair(74f, 3.6f),
-                Pair(95f, 2.8f), Pair(135f, 7.5f), Pair(175f, 6.2f),
-                Pair(215f, 4.5f), Pair(250f, 4.2f)
-            )
-
-            paint.style = Paint.Style.STROKE
-            for ((r, size) in planets) {
-                if (r > w / 2f) continue
-                paint.color = Color.WHITE
-                paint.alpha = 40
-                paint.strokeWidth = 1f
-                canvas.drawCircle(cx, cy, r, paint)
-
-                val speed = 1.8 / (sqrt(r.toDouble()) * 0.15)
-                val angle = (t * speed * 0.25 + r) % (2 * PI)
-                val px = cx + (r * cos(angle)).toFloat()
-                val py = cy + (r * sin(angle)).toFloat()
-
-                paint.style = Paint.Style.FILL
-                paint.alpha = 255
-                canvas.drawCircle(px, py, size, paint)
-
-                if (r == 175f) {
-                    paint.style = Paint.Style.STROKE
-                    paint.alpha = 180
-                    paint.strokeWidth = 1.5f
-                    canvas.drawOval(RectF(px - 11f, py - 4f, px + 11f, py + 4f), paint)
-                }
-            }
-
-            paint.style = Paint.Style.FILL
-            paint.color = Color.WHITE
-            for (i in 0 until 50) {
-                val rAst = 110f + ((i * 13) % 15)
-                val aAst = (i * 0.13 + t * 0.08) % (2 * PI)
-                val ax = cx + (rAst * cos(aAst)).toFloat()
-                val ay = cy + (rAst * sin(aAst)).toFloat()
-                paint.alpha = (80 + (i % 100)).coerceIn(50, 180)
-                canvas.drawCircle(ax, ay, 1.2f, paint)
-            }
-        }
-
-        // #15: SPACETIME GRAVITY FABRIC
-        private fun drawSpacetimeFabric(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f + 20f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+            // 1. Two high-voltage electrodes (Top and Bottom)
             paint.style = Paint.Style.STROKE
             paint.color = Color.WHITE
+            paint.strokeWidth = 2.5f
+            paint.alpha = 200
+            canvas.drawArc(RectF(cx - 35f + shiftX, 15f + shiftY, cx + 35f + shiftX, 45f + shiftY), 0f, 180f, false, paint)
+            canvas.drawArc(RectF(cx - 35f + shiftX, h - 45f + shiftY, cx + 35f + shiftX, h - 15f + shiftY), 180f, 180f, false, paint)
 
-            val cols = 14
-            val rows = 9
-            val dx = w / (cols + 1f)
-            val dy = (h - 40f) / (rows + 1f)
+            // 2. High-frequency plasma flicker cycle
+            val cycle = (t * speed * 8.0) % 10.0
+            val intensity = if (cycle < 7.0) (sin(cycle * PI) * 190 + 55).toInt().coerceIn(60, 245) else 50
 
-            fun warp(x: Float, y: Float): Pair<Float, Float> {
-                val dist = sqrt((x - cx).pow(2) + (y - cy).pow(2))
-                val depth = 55f / (1f + (dist / 65f).pow(2))
-                return Pair(x, y + depth)
-            }
+            // 3. Main lightning discharge branch (Jagged fractal path)
+            val path = Path()
+            val startX = cx + shiftX
+            val startY = 45f + shiftY
+            val endX = cx + ((sin(t * speed * 3.5) * 45f).toFloat()) + shiftX
+            val endY = h - 45f + shiftY
 
-            for (r in 1..rows) {
-                val path = Path()
-                val y = r * dy + 20f
-                paint.alpha = (50 + r * 15).coerceIn(40, 200)
-                paint.strokeWidth = 1f
-                for (c in 1..cols) {
-                    val x = c * dx
-                    val (wx, wy) = warp(x, y)
-                    if (c == 1) path.moveTo(wx, wy) else path.lineTo(wx, wy)
-                }
-                canvas.drawPath(path, paint)
-            }
-
-            for (c in 1..cols) {
-                val path = Path()
-                val x = c * dx
-                paint.alpha = (60 + ((c % 4) * 20)).coerceIn(40, 180)
-                for (r in 1..rows) {
-                    val y = r * dy + 20f
-                    val (wx, wy) = warp(x, y)
-                    if (r == 1) path.moveTo(wx, wy) else path.lineTo(wx, wy)
-                }
-                canvas.drawPath(path, paint)
-            }
-
-            paint.style = Paint.Style.FILL
-            paint.color = Color.WHITE
-            paint.alpha = 255
-            canvas.drawCircle(cx, cy + 45f, 9f, paint)
-        }
-
-        // #12: CYBER-SYNAPSE NEURAL WEB
-        private fun drawNeuralWeb(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-            val nodes = listOf(
-                Pair(cx - 160f, cy - 70f), Pair(cx - 150f, cy + 60f),
-                Pair(cx - 80f, cy - 110f), Pair(cx - 70f, cy), Pair(cx - 85f, cy + 90f),
-                Pair(cx, cy - 60f), Pair(cx, cy + 40f),
-                Pair(cx + 80f, cy - 90f), Pair(cx + 70f, cy + 20f), Pair(cx + 85f, cy + 100f),
-                Pair(cx + 160f, cy - 50f), Pair(cx + 150f, cy + 70f)
-            )
-
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = 1.2f
-            for (i in nodes.indices) {
-                for (j in (i + 1) until nodes.size) {
-                    val d = sqrt((nodes[i].first - nodes[j].first).pow(2) + (nodes[i].second - nodes[j].second).pow(2))
-                    if (d < 130f) {
-                        val pulse = (sin(t * 3.0 + i + j) + 1.0) / 2.0
-                        paint.color = Color.WHITE
-                        paint.alpha = (30 + pulse * 180).toInt().coerceIn(30, 240)
-                        canvas.drawLine(nodes[i].first, nodes[i].second, nodes[j].first, nodes[j].second, paint)
-                    }
-                }
-            }
-
-            paint.style = Paint.Style.FILL
-            for ((idx, node) in nodes.withIndex()) {
-                val glow = (sin(t * 2.5 + idx) + 1.0) / 2.0
-                paint.color = Color.WHITE
-                paint.alpha = 255
-                canvas.drawCircle(node.first, node.second, 3.5f + glow.toFloat() * 2f, paint)
-
-                paint.style = Paint.Style.STROKE
-                paint.alpha = (glow * 180).toInt()
-                paint.strokeWidth = 1f
-                canvas.drawCircle(node.first, node.second, 8f + glow.toFloat() * 4f, paint)
-                paint.style = Paint.Style.FILL
-            }
-        }
-
-        // #1: KINETIC SAND
-        private fun drawKineticSand(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            paint.style = Paint.Style.FILL
-            paint.color = Color.WHITE
-
-            val count = 160
-            for (i in 0 until count) {
-                val angle = i * 0.22 + t * 0.4
-                val r = 25f + ((i * 19) % 160)
-                val px = cx + (r * cos(angle) * (1.0 + 0.2 * sin(angle * 3))).toFloat()
-                val py = cy + (r * sin(angle) * 0.65).toFloat()
-                paint.alpha = ((i * 37) % 200 + 55).coerceIn(40, 255)
-                canvas.drawCircle(px, py, 1.8f, paint)
-            }
-
-            paint.style = Paint.Style.STROKE
-            paint.alpha = 120
-            paint.strokeWidth = 1.5f
-            canvas.drawCircle(cx - 60f, cy, 14f, paint)
-            canvas.drawCircle(cx + 60f, cy, 14f, paint)
-        }
-
-        // #2: BONSAI FRACTAL TRIMMER
-        private fun drawBonsai(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val baseCy = h - 35f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            paint.style = Paint.Style.STROKE
-            paint.color = Color.WHITE
-            paint.strokeCap = Paint.Cap.ROUND
-
-            paint.strokeWidth = 2f
-            paint.alpha = 220
-            canvas.drawRect(cx - 65f, baseCy, cx + 65f, baseCy + 14f, paint)
-
-            fun branch(x: Float, y: Float, len: Float, angle: Float, depth: Int) {
-                if (depth <= 0) {
-                    paint.style = Paint.Style.FILL
-                    paint.alpha = 200
-                    canvas.drawCircle(x, y, 4.5f, paint)
-                    paint.style = Paint.Style.STROKE
-                    return
-                }
-                val rad = Math.toRadians(angle.toDouble())
-                val x2 = (x + len * sin(rad)).toFloat()
-                val y2 = (y - len * cos(rad)).toFloat()
-                paint.strokeWidth = depth.toFloat() * 1.5f
-                paint.alpha = (100 + depth * 30).coerceIn(80, 255)
-                canvas.drawLine(x, y, x2, y2, paint)
-
-                val sway = (sin(t * 1.2 + depth) * 3f).toFloat()
-                branch(x2, y2, len * 0.74f, angle - 26f + sway, depth - 1)
-                branch(x2, y2, len * 0.70f, angle + 24f + sway, depth - 1)
-            }
-
-            branch(cx, baseCy, 50f, -4f, 5)
-        }
-
-        // #3: LIQUID MERCURY POOL
-        private fun drawLiquidMercury(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            paint.style = Paint.Style.STROKE
-            paint.color = Color.WHITE
-
-            for (i in 1..8) {
-                val r = (i * 26f + (t * 20.0).toFloat()) % 220f
-                val alpha = (255 * (1f - (r / 220f))).toInt().coerceIn(0, 255)
-                paint.alpha = alpha
-                paint.strokeWidth = 2.0f
-                canvas.drawCircle(cx, cy, r, paint)
-            }
-        }
-
-        // #4: MECHANICAL TALLY CLICKER
-        private fun drawClicker(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            paint.style = Paint.Style.STROKE
-            paint.color = Color.WHITE
-            paint.strokeWidth = 3f
-
-            canvas.drawRoundRect(RectF(cx - 100f, cy - 60f, cx + 100f, cy + 60f), 20f, 20f, paint)
-            canvas.drawRect(RectF(cx - 70f, cy - 35f, cx + 70f, cy + 35f), paint)
-
-            paint.style = Paint.Style.FILL
-            paint.textSize = 42f
-            paint.textAlign = Paint.Align.CENTER
-            val count = ((t * 2) % 9999).toInt()
-            canvas.drawText(String.format(Locale.US, "%04d", count), cx, cy + 15f, paint)
-        }
-
-        // #5: ORBITAL SLINGSHOT
-        private fun drawOrbitalSlingshot(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-            paint.style = Paint.Style.FILL
-            paint.color = Color.WHITE
-            canvas.drawCircle(cx, cy, 16f, paint)
-
-            paint.style = Paint.Style.STROKE
-            paint.strokeWidth = 1.5f
-            for (i in 1..3) {
-                val a = 70f * i
-                val b = 40f * i
-                paint.alpha = 80
-                canvas.drawOval(RectF(cx - a, cy - b, cx + a, cy + b), paint)
-
-                val angle = t * (2.0 / i)
-                val sx = cx + (a * cos(angle)).toFloat()
-                val sy = cy + (b * sin(angle)).toFloat()
-                paint.style = Paint.Style.FILL
-                paint.alpha = 255
-                canvas.drawCircle(sx, sy, 4f, paint)
-                paint.style = Paint.Style.STROKE
-            }
-        }
-
-        // #6: MAGNETIC IRON FILINGS
-        private fun drawMagneticFilings(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            paint.color = Color.WHITE
-            paint.strokeWidth = 1.5f
-
-            for (gx in -4..4) {
-                for (gy in -3..3) {
-                    val px = cx + gx * 45f
-                    val py = cy + gy * 35f
-                    val angle = atan2((py - cy).toDouble(), (px - cx).toDouble()) + PI / 2
-                    val len = 12f
-                    val x1 = (px - len * cos(angle)).toFloat()
-                    val y1 = (py - len * sin(angle)).toFloat()
-                    val x2 = (px + len * cos(angle)).toFloat()
-                    val y2 = (py + len * sin(angle)).toFloat()
-                    paint.alpha = 180
-                    canvas.drawLine(x1, y1, x2, y2, paint)
-                }
-            }
-        }
-
-        // #7: KALEIDO PAINTER
-        private fun drawKaleido(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            paint.style = Paint.Style.STROKE
-            paint.color = Color.WHITE
-            paint.strokeWidth = 1.8f
-
-            canvas.save()
-            canvas.rotate((t * 15).toFloat(), cx, cy)
-            for (i in 0 until 8) {
-                canvas.rotate(45f, cx, cy)
-                paint.alpha = 180
-                canvas.drawOval(RectF(cx - 30f, cy - 80f, cx + 30f, cy + 80f), paint)
-                canvas.drawCircle(cx, cy - 70f, 12f, paint)
-            }
-            canvas.restore()
-        }
-
-        // #8: CONSTELLATIONS HARP
-        private fun drawConstellations(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-
-            val stars = listOf(
-                Pair(cx - 120f, cy - 60f), Pair(cx - 60f, cy - 90f),
-                Pair(cx, cy - 40f), Pair(cx + 70f, cy - 80f),
-                Pair(cx + 130f, cy - 30f), Pair(cx + 80f, cy + 50f),
-                Pair(cx, cy + 70f), Pair(cx - 90f, cy + 40f)
-            )
-
-            paint.style = Paint.Style.STROKE
-            paint.color = Color.WHITE
-            paint.alpha = 140
-            paint.strokeWidth = 1.2f
-            for (i in 0 until stars.size - 1) {
-                canvas.drawLine(stars[i].first, stars[i].second, stars[i + 1].first, stars[i + 1].second, paint)
-            }
-
-            paint.style = Paint.Style.FILL
-            for (s in stars) {
-                paint.alpha = 255
-                canvas.drawCircle(s.first, s.second, 3.5f, paint)
-            }
-        }
-
-        // #9: MORSE TELEGRAPH
-        private fun drawMorseTelegraph(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            paint.style = Paint.Style.STROKE
-            paint.color = Color.WHITE
-            paint.strokeWidth = 4f
-
-            // Waveform pulses
-            val startX = cx - 180f
+            path.moveTo(startX, startY)
+            val segments = 8
+            val segH = (endY - startY) / segments
             var curX = startX
-            val py = cy
-            for (i in 0 until 12) {
-                val isDash = (i % 3 == 0)
-                val len = if (isDash) 30f else 10f
-                paint.alpha = 220
-                canvas.drawLine(curX, py - 15f, curX + len, py - 15f, paint)
-                curX += len + 15f
-            }
-        }
+            var curY = startY
 
-        // #10: QUANTUM PHOTON CLOUD
-        private fun drawPhotonCloud(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            paint.style = Paint.Style.FILL
-            paint.color = Color.WHITE
+            for (s in 1 until segments) {
+                val targetY = startY + s * segH
+                val jitter = (sin(s * 2.3 + t * speed * 12.0) * 32f).toFloat()
+                val targetX = curX + (endX - curX) / (segments - s + 1) + jitter
+                path.lineTo(targetX, targetY)
 
-            for (i in 0 until 70) {
-                val a = i * 0.4 + t * 0.5
-                val r = (i * 7f) % 150f
-                val px = cx + (r * cos(a)).toFloat()
-                val py = cy + (r * sin(a)).toFloat()
-                paint.alpha = ((i * 19) % 200 + 55).coerceIn(50, 255)
-                canvas.drawCircle(px, py, 2.2f, paint)
-            }
-        }
+                // Branching fork off the main discharge
+                if (s == 3 || s == 5) {
+                    val forkPath = Path()
+                    forkPath.moveTo(targetX, targetY)
+                    val forkDir = if (s == 3) -1f else 1f
+                    val forkX1 = targetX + forkDir * (25f + (sin(t * 5.0) * 15f).toFloat())
+                    val forkY1 = targetY + 20f
+                    val forkX2 = forkX1 + forkDir * 20f
+                    val forkY2 = forkY1 + 15f
+                    forkPath.lineTo(forkX1, forkY1)
+                    forkPath.lineTo(forkX2, forkY2)
 
-        // #11: BIOLUMINESCENT MYCELIUM
-        private fun drawMycelium(canvas: Canvas, w: Int, h: Int, t: Double) {
-            val cx = w / 2f
-            val cy = h / 2f
-            val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-            paint.style = Paint.Style.STROKE
-            paint.color = Color.WHITE
-
-            for (i in 0 until 10) {
-                val angle = i * (2 * PI / 10)
-                var px = cx
-                var py = cy
-                paint.strokeWidth = 1.5f
-                paint.alpha = 170
-                for (step in 1..6) {
-                    val nx = px + (cos(angle) * 22f + sin(t + step) * 8f).toFloat()
-                    val ny = py + (sin(angle) * 22f + cos(t + step) * 8f).toFloat()
-                    canvas.drawLine(px, py, nx, ny, paint)
-                    px = nx
-                    py = ny
+                    paint.strokeWidth = 1.2f
+                    paint.alpha = (intensity * 0.65f).toInt()
+                    canvas.drawPath(forkPath, paint)
                 }
+
+                curX = targetX
+                curY = targetY
             }
+            path.lineTo(endX, endY)
+
+            // Outer plasma glow
+            paint.strokeWidth = 5.5f
+            paint.alpha = (intensity * 0.35f).toInt()
+            canvas.drawPath(path, paint)
+
+            // Inner bright core
+            paint.strokeWidth = 2.0f
+            paint.alpha = intensity
+            canvas.drawPath(path, paint)
+
+            // Center spark nodes
+            paint.style = Paint.Style.FILL
+            paint.alpha = intensity
+            canvas.drawCircle(startX, startY, 4f, paint)
+            canvas.drawCircle(endX, endY, 4f, paint)
         }
 
-        // #16: NIXIE TUBE TESLA COUNTER
-        private fun drawNixieTube(canvas: Canvas, w: Int, h: Int, t: Double) {
+        // STATIC NOTHING OS EMBLEM FOR ALL OTHER GAMES
+        private fun drawStaticEmblem(canvas: Canvas, w: Int, h: Int, gameId: Int, name: String) {
             val cx = w / 2f
             val cy = h / 2f
             val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+
             paint.style = Paint.Style.STROKE
             paint.color = Color.WHITE
+
             paint.strokeWidth = 2f
+            paint.alpha = 180
+            canvas.drawCircle(cx, cy - 18f, 42f, paint)
 
-            val tubeW = 48f
-            val tubeH = 80f
-            val gap = 16f
-            val startX = cx - 2 * (tubeW + gap) + gap / 2f
+            paint.strokeWidth = 1.2f
+            paint.alpha = 100
+            canvas.drawCircle(cx, cy - 18f, 26f, paint)
 
-            for (i in 0 until 4) {
-                val tx = startX + i * (tubeW + gap)
-                paint.alpha = 140
-                canvas.drawRoundRect(RectF(tx, cy - tubeH / 2, tx + tubeW, cy + tubeH / 2), 10f, 10f, paint)
+            paint.style = Paint.Style.FILL
+            paint.alpha = 220
+            canvas.drawCircle(cx, cy - 18f, 10f, paint)
 
-                paint.style = Paint.Style.FILL
-                paint.textSize = 34f
-                paint.textAlign = Paint.Align.CENTER
-                paint.alpha = 255
-                val digit = ((t + i * 3) % 10).toInt()
-                canvas.drawText("$digit", tx + tubeW / 2, cy + 12f, paint)
-                paint.style = Paint.Style.STROKE
-            }
+            paint.textSize = 12f
+            paint.textAlign = Paint.Align.CENTER
+            paint.alpha = 140
+            paint.color = Color.WHITE
+            canvas.drawText("STATIC // EMBLEM MODE", cx, cy + 46f, paint)
         }
     }
 }

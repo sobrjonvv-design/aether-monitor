@@ -17,12 +17,12 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
+import com.aether.monitor.widget.AetherAnimationService
 import com.aether.monitor.widget.AetherWidgetProvider
 
 /**
  * AETHER // Native Host Activity
- * Lightweight, crash-proof native Activity with hardware-accelerated OLED WebView
- * & Native Home Screen AppWidget Pinning Bridge
+ * Hardware-accelerated OLED WebView & Home Screen Widget Pinning Bridge
  */
 class MainActivity : Activity() {
 
@@ -32,7 +32,6 @@ class MainActivity : Activity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        // Seamless black fullscreen
         requestWindowFeature(Window.FEATURE_NO_TITLE)
         window.setFlags(
             WindowManager.LayoutParams.FLAG_HARDWARE_ACCELERATED,
@@ -94,7 +93,7 @@ class MainActivity : Activity() {
                         .putString("pinned_zen_name", gameName)
                         .apply()
 
-                    // 2. Refresh any active AETHER widgets on the home screen
+                    // 2. Refresh active AETHER widgets on home screen
                     val appWidgetManager = AppWidgetManager.getInstance(ctx)
                     val component = ComponentName(ctx, AetherWidgetProvider::class.java)
                     val ids = appWidgetManager.getAppWidgetIds(component)
@@ -102,19 +101,25 @@ class MainActivity : Activity() {
                         AetherWidgetProvider.updateAppWidget(ctx, appWidgetManager, id)
                     }
 
-                    // 3. Request native Android 8.0+ Home Screen Widget Pinning
+                    // 3. Start live animation service if it's one of the animated games
+                    if (AetherWidgetProvider.isAnimatedGame(gameId)) {
+                        AetherWidgetProvider.startAnimationService(ctx)
+                    }
+
+                    // 4. Request native Android 8.0+ Home Screen Widget Pinning
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         if (appWidgetManager.isRequestPinAppWidgetSupported) {
                             appWidgetManager.requestPinAppWidget(component, null, null)
+                            val animText = if (AetherWidgetProvider.isAnimatedGame(gameId)) "с живой OLED-анимацией" else "в статичном режиме"
                             Toast.makeText(
                                 ctx,
-                                "Добавление виджета игры #$gameId на рабочий стол...",
+                                "Виджет #$gameId ($gameName) $animText готов к добавлению!",
                                 Toast.LENGTH_SHORT
                             ).show()
                         } else {
                             Toast.makeText(
                                 ctx,
-                                "Виджет обновлен! Зажмите пустой экран и выберите Виджеты -> AETHER",
+                                "Виджет обновлен! Зажмите пустой экран -> Виджеты -> AETHER",
                                 Toast.LENGTH_LONG
                             ).show()
                         }
@@ -128,6 +133,22 @@ class MainActivity : Activity() {
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
+            }
+        }
+
+        @JavascriptInterface
+        fun setWidgetSpeed(speed: Float) {
+            runOnUiThread {
+                try {
+                    val prefs = ctx.getSharedPreferences("aether_prefs", Context.MODE_PRIVATE)
+                    prefs.edit().putFloat("widget_speed", speed).apply()
+                    val appWidgetManager = AppWidgetManager.getInstance(ctx)
+                    val component = ComponentName(ctx, AetherWidgetProvider::class.java)
+                    val ids = appWidgetManager.getAppWidgetIds(component)
+                    for (id in ids) {
+                        AetherWidgetProvider.updateAppWidget(ctx, appWidgetManager, id)
+                    }
+                } catch (e: Exception) {}
             }
         }
     }

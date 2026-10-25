@@ -1707,8 +1707,11 @@
           <div id="zenHudLabel" style="font-size:9px; color:#777777; margin-top:3px;"></div>
         </div>
 
-        <!-- Subtle Top-Right Controls: Pin Active Game as Widget & True Fullscreen -->
+        <!-- Subtle Top-Right Controls: Speed, Pin Active Game as Widget & True Fullscreen -->
         <div class="zen-top-actions">
+          <button class="zen-pill-btn zen-subtle-ctrl" id="zenSpeedBtn" title="Скорость анимации">
+            <span>⚡</span> <span id="zenSpeedLabel">1X</span>
+          </button>
           <button class="zen-pill-btn zen-subtle-ctrl" id="zenPinWidgetBtn" title="Добавить активную игру как виджет на главный экран">
             <span>◰</span> <span>В ВИДЖЕТ</span>
           </button>
@@ -2667,6 +2670,28 @@ class ZenLabEngine {
     document.getElementById('zenImmersiveBtn').addEventListener('click', () => {
       document.getElementById('app').classList.toggle('zen-immersive');
       setTimeout(() => this.start(this.currentIdx), 50);
+    });
+
+    document.getElementById('zenSpeedBtn')?.addEventListener('click', () => {
+      FeedbackSystem.triggerHaptic('medium');
+      FeedbackSystem.playBeep(1440, 0.08, 'sine');
+      const speeds = [0.5, 1.0, 2.0, 4.0];
+      const cur = parseFloat(localStorage.getItem('aether_widget_speed') || '1.0');
+      const next = speeds[(speeds.indexOf(cur) + 1) % speeds.length] || 1.0;
+      localStorage.setItem('aether_widget_speed', String(next));
+      document.getElementById('zenSpeedLabel').textContent = `${next}X`;
+
+      if (window.AndroidBridge && typeof window.AndroidBridge.setWidgetSpeed === 'function') {
+        window.AndroidBridge.setWidgetSpeed(next);
+      }
+
+      const toast = document.getElementById('zenWidgetToast');
+      if (toast) {
+        document.getElementById('zenWidgetToastTitle').textContent = `⚡ СКОРОСТЬ: ${next}X`;
+        document.getElementById('zenWidgetToastDesc').textContent = 'Скорость вращения анимации в виджете обновлена!';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 2000);
+      }
     });
 
     document.getElementById('zenPinWidgetBtn').addEventListener('click', () => {
