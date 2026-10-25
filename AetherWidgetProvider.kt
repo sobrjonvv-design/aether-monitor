@@ -125,14 +125,24 @@ class AetherWidgetProvider : AppWidgetProvider() {
                 views.setTextViewText(R.id.widget_net_sub, "ONLINE")
             }
 
-            // 5. Click Intent
+            // 5. Pinned Active Zen Game & Click Intent
             try {
+                val prefs = context.getSharedPreferences("aether_prefs", Context.MODE_PRIVATE)
+                val pinnedZenId = prefs.getInt("pinned_zen_id", 14)
+                val pinnedZenName = prefs.getString("pinned_zen_name", "Solar System Gravity")
+
+                views.setTextViewText(
+                    R.id.widget_footer,
+                    "▶ ZEN #${String.format("%02d", pinnedZenId)}: ${pinnedZenName?.uppercase()} [ИГРАТЬ]"
+                )
+
                 val intent = Intent(context, MainActivity::class.java).apply {
                     flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                    putExtra("zen_game_id", pinnedZenId)
                 }
                 val pendingIntent = PendingIntent.getActivity(
                     context,
-                    0,
+                    pinnedZenId,
                     intent,
                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                 )

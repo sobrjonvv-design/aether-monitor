@@ -169,15 +169,15 @@
 
     </LinearLayout>
 
-    <!-- Footer Specs -->
+    <!-- Pinned Zen Game Launcher Bar -->
     <TextView
         android:id="@+id/widget_footer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="10dp"
         android:fontFamily="monospace"
-        android:text="LINK: ACTIVE // OLED BLACK MATRIX"
-        android:textColor="@color/gray_dim"
-        android:textSize="8sp" />
+        android:text="▶ ZEN #14: SOLAR SYSTEM [ИГРАТЬ]"
+        android:textColor="@color/white"
+        android:textSize="9sp" />
 
 </LinearLayout>

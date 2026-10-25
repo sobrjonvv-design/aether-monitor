@@ -1338,7 +1338,7 @@
           <span>📲</span> <span id="pwaInstallBannerText">INSTALL TO ANDROID</span>
         </button>
         <button id="launchFloatingWidgetBtn">
-          <span>◰</span> <span>FLOATING WIDGET</span>
+          <span>◰</span> <span>ВИДЖЕТ SYS.01</span>
         </button>
       </div>
 
@@ -1826,12 +1826,12 @@
       </div>
 
       <div style="margin-bottom: 14px;">
-        <div style="font-weight:600; font-size:11px; margin-bottom:6px; color:#ffffff;">РЕЖИМ 1: ПЛАВАЮЩИЙ OLED-ВИДЖЕТ</div>
+        <div style="font-weight:600; font-size:11px; margin-bottom:6px; color:#ffffff;">НАТИВНЫЙ ВИДЖЕТ ДЛЯ РАБОЧЕГО СТОЛА ANDROID</div>
         <p style="color:var(--fg-secondary); font-size:10px; margin-bottom:8px;">
-          Запускает поверх всех приложений и рабочего стола живое плавающее окно (Picture-in-Picture) с часами, RAM, батареей и скоростью сети.
+          Закрепляет виджет на главном экране Android с живыми данными батареи, RAM, сети и выбранной антистресс-игры.
         </p>
         <button class="btn sm solid" id="triggerWidgetModalAction" style="width:100%; margin-bottom:14px;">
-          ▶ ЗАПУСТИТЬ ПЛАВАЮЩИЙ ВИДЖЕТ
+          ◰ ДОБАВИТЬ ВИДЖЕТ НА ГЛАВНЫЙ ЭКРАН
         </button>
       </div>
 
@@ -2016,143 +2016,29 @@ class Logger {
 }
 
 /* ==========================================================================
-   FLOATING OLED WIDGET (PICTURE-IN-PICTURE SYSTEM OVERLAY)
+   NATIVE ANDROID HOME SCREEN WIDGET SYSTEM
    ========================================================================== */
 class FloatingWidgetSystem {
-  static canvas = null;
-  static ctx = null;
-  static video = null;
-  static stream = null;
-  static timer = null;
-
-  static init() {
-    this.canvas = document.createElement('canvas');
-    this.canvas.width = 360;
-    this.canvas.height = 180;
-    this.ctx = this.canvas.getContext('2d');
-    
-    this.video = document.createElement('video');
-    this.video.muted = true;
-    this.video.playsInline = true;
-    this.video.style.position = 'fixed';
-    this.video.style.pointerEvents = 'none';
-    this.video.style.opacity = '0';
-    this.video.style.bottom = '0';
-    this.video.style.right = '0';
-    this.video.style.width = '1px';
-    this.video.style.height = '1px';
-    document.body.appendChild(this.video);
-
-    this.video.addEventListener('leavepictureinpicture', () => {
-      if (this.timer) clearInterval(this.timer);
-      Logger.log('SYS', 'Floating widget overlay dismissed');
-    });
-  }
-
-  static draw() {
-    const ctx = this.ctx;
-    const w = this.canvas.width;
-    const h = this.canvas.height;
-
-    // Pure OLED black background
-    ctx.fillStyle = '#000000';
-    ctx.fillRect(0, 0, w, h);
-
-    // Subtle 1px white border
-    ctx.strokeStyle = '#282828';
-    ctx.lineWidth = 2;
-    ctx.strokeRect(1, 1, w - 2, h - 2);
-
-    // Clock
-    const d = new Date();
-    const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 30px "JetBrains Mono", monospace';
-    ctx.fillText(timeStr, 16, 42);
-
-    ctx.font = '10px "Inter", sans-serif';
-    ctx.fillStyle = '#888888';
-    ctx.fillText('AETHER // OLED HUD WIDGET', 16, 58);
-
-    // Mini decorative concentric icon
-    ctx.beginPath();
-    ctx.arc(w - 28, 34, 14, 0, Math.PI * 2);
-    ctx.strokeStyle = '#FFFFFF';
-    ctx.lineWidth = 1.5;
-    ctx.stroke();
-    ctx.beginPath();
-    ctx.arc(w - 28, 34, 6, 0, Math.PI * 2);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.fill();
-
-    // Divider
-    ctx.strokeStyle = '#222222';
-    ctx.lineWidth = 1;
-    ctx.beginPath();
-    ctx.moveTo(16, 70);
-    ctx.lineTo(w - 16, 70);
-    ctx.stroke();
-
-    // Stats
-    const batt = document.getElementById('battPercent')?.textContent || '84%';
-    const ram = document.getElementById('ramPercent')?.textContent || '58%';
-    const rate = document.getElementById('liveDlRate')?.textContent || '1.24 MB/s';
-
-    // Battery column
-    ctx.fillStyle = '#777777';
-    ctx.font = '9px "JetBrains Mono", monospace';
-    ctx.fillText('BATT', 16, 94);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 20px "JetBrains Mono", monospace';
-    ctx.fillText(batt, 16, 118);
-
-    // RAM column
-    ctx.fillStyle = '#777777';
-    ctx.font = '9px "JetBrains Mono", monospace';
-    ctx.fillText('RAM', 120, 94);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 20px "JetBrains Mono", monospace';
-    ctx.fillText(ram, 120, 118);
-
-    // Rate column
-    ctx.fillStyle = '#777777';
-    ctx.font = '9px "JetBrains Mono", monospace';
-    ctx.fillText('SPEED (RX)', 220, 94);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 18px "JetBrains Mono", monospace';
-    ctx.fillText(rate, 220, 118);
-
-    // Bottom telemetry line
-    ctx.fillStyle = '#444444';
-    ctx.font = '9px "JetBrains Mono", monospace';
-    ctx.fillText('LINK: 5G NR // DISPLAY: 120HZ OLED', 16, 156);
-  }
+  static init() {}
 
   static async toggle() {
-    if (!this.canvas) this.init();
+    FeedbackSystem.triggerHaptic('heavy');
+    FeedbackSystem.playBeep(1760, 0.12, 'triangle');
+    const curId = (typeof ZenSuite !== 'undefined' && ZenSuite.currentIdx) ? ZenSuite.currentIdx : 14;
+    const curMod = (typeof ZenSuite !== 'undefined' && ZenSuite.modules) 
+      ? (ZenSuite.modules.find(x => x.idx === curId) || {name: 'Solar System Gravity'}) 
+      : {name: 'Solar System Gravity'};
 
-    try {
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture();
-        if (this.timer) clearInterval(this.timer);
-        Logger.log('SYS', 'Floating widget closed');
-        return;
+    if (window.AndroidBridge && typeof window.AndroidBridge.pinActiveGame === 'function') {
+      window.AndroidBridge.pinActiveGame(curId, curMod.name);
+    } else {
+      const toast = document.getElementById('zenWidgetToast');
+      if (toast) {
+        document.getElementById('zenWidgetToastTitle').textContent = '◰ ВИДЖЕТ AETHER SYS.01';
+        document.getElementById('zenWidgetToastDesc').textContent = 'Виджет готов! Добавьте AETHER через меню виджетов рабочего стола Android.';
+        toast.classList.add('show');
+        setTimeout(() => toast.classList.remove('show'), 3500);
       }
-
-      this.draw();
-      if (!this.stream) {
-        this.stream = this.canvas.captureStream(5);
-        this.video.srcObject = this.stream;
-      }
-      await this.video.play();
-      await this.video.requestPictureInPicture();
-      
-      this.timer = setInterval(() => this.draw(), 1000);
-      Logger.log('SYS', 'Floating OLED Widget active on Home Screen (PiP)');
-      FeedbackSystem.notifyDone();
-    } catch (err) {
-      Logger.log('WARN', 'PiP widget error: ' + err.message, 'warn');
-      alert('Для плавающего виджета: перейдите на главный экран или разрешите «Картинка в картинке» в настройках Chrome.');
     }
   }
 }
@@ -2829,33 +2715,9 @@ class ZenLabEngine {
     const toast = document.getElementById('zenWidgetToast');
     document.getElementById('zenWidgetToastTitle').textContent = `◰ ВИДЖЕТ: #${String(m.idx).padStart(2, '0')} ${m.name.toUpperCase()}`;
     document.getElementById('zenWidgetToastDesc').textContent =
-      'Игра привязана к виджету главного экрана Android и запущена в PiP-режиме!';
+      'Игра закреплена в нативном виджете на рабочем столе Android!';
     toast.classList.add('show');
     setTimeout(() => toast.classList.remove('show'), 3200);
-
-    // 3. Also launch Live Picture-in-Picture Floating Game Widget if supported
-    try {
-      if (document.pictureInPictureElement) {
-        await document.exitPictureInPicture();
-      } else if (this.canvas.captureStream && document.pictureInPictureEnabled) {
-        let vid = document.getElementById('zenPipVideo');
-        if (!vid) {
-          vid = document.createElement('video');
-          vid.id = 'zenPipVideo';
-          vid.muted = true;
-          vid.playsInline = true;
-          vid.style.position = 'fixed';
-          vid.style.opacity = '0';
-          vid.style.pointerEvents = 'none';
-          vid.style.width = '1px';
-          vid.style.height = '1px';
-          document.body.appendChild(vid);
-        }
-        vid.srcObject = this.canvas.captureStream(30);
-        await vid.play();
-        await vid.requestPictureInPicture();
-      }
-    } catch (e) {}
   }
 
   static renderSelectors() {
@@ -3646,7 +3508,7 @@ window.addEventListener('DOMContentLoaded', () => {
   Logger.log('SYS', 'AETHER OLED Mobile Telemetry OS v2.5 initialized');
   Logger.log('SYS', 'Display Mode: Pure Black OLED (#000000) Monochromatic Vector');
   Logger.log('NET', 'Local Interface: Wi-Fi 6 + 5G Dual-Standby mapped');
-  Logger.log('SYS', 'Android Widget Subsystems: PiP Floating HUD + App Shortcuts enabled');
+  Logger.log('SYS', 'Android Widget Subsystems: Native AppWidgetProvider (4x2 / 2x2) enabled');
 });
 </script>
 </body>
