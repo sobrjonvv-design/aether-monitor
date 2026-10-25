@@ -21,10 +21,10 @@ jobs:
 
     - name: Assemble Crash-Proof Android Project
       run: |
-        # Очистка дубликатов
+        # Clean potential duplicate files from web uploads
         rm -f "build.gradle (1).kts" "index (2).html" "build-apk.yml"
 
-        # Структура папок
+        # Directory structure
         mkdir -p app/src/main/java/com/aether/monitor/widget
         mkdir -p app/src/main/res/layout
         mkdir -p app/src/main/res/xml
@@ -32,25 +32,33 @@ jobs:
         mkdir -p app/src/main/res/values
         mkdir -p app/src/main/assets/www
 
-        # Базовые ресурсы
+        # Base resources from root
         cp bg_widget_oled.xml ic_concentric_logo.xml app/src/main/res/drawable/ || true
         cp colors.xml strings.xml app/src/main/res/values/ || true
         cp index.html app/src/main/assets/www/ || true
 
-        # 1. Исправленный MainActivity (не вылетает на старте)
+        # 1. Crash-Proof MainActivity with Native Android AppWidget Pinning Bridge
         cat << 'EOF' > app/src/main/java/com/aether/monitor/MainActivity.kt
         package com.aether.monitor
 
         import android.annotation.SuppressLint
         import android.app.Activity
+        import android.appwidget.AppWidgetManager
+        import android.content.ComponentName
+        import android.content.Context
+        import android.content.Intent
         import android.graphics.Color
+        import android.os.Build
         import android.os.Bundle
         import android.view.Window
         import android.view.WindowManager
+        import android.webkit.JavascriptInterface
         import android.webkit.WebChromeClient
         import android.webkit.WebSettings
         import android.webkit.WebView
         import android.webkit.WebViewClient
+        import android.widget.Toast
+        import com.aether.monitor.widget.AetherWidgetProvider
 
         class MainActivity : Activity() {
             private lateinit var webView: WebView
@@ -77,14 +85,84 @@ jobs:
                     databaseEnabled = true
                     allowFileAccess = true
                     allowContentAccess = true
+                    mediaPlaybackRequiresUserGesture = false
                     cacheMode = WebSettings.LOAD_DEFAULT
                     useWideViewPort = true
                     loadWithOverviewMode = true
                 }
 
+                webView.addJavascriptInterface(AndroidBridge(this), "AndroidBridge")
                 webView.webViewClient = WebViewClient()
                 webView.webChromeClient = WebChromeClient()
-                webView.loadUrl("file:///android_asset/www/index.html")
+
+                loadFromIntent(intent)
+            }
+
+            override fun onNewIntent(intent: Intent?) {
+                super.onNewIntent(intent)
+                if (intent != null) {
+                    setIntent(intent)
+                    loadFromIntent(intent)
+                }
+            }
+
+            private fun loadFromIntent(intent: Intent?) {
+                val zenGameId = intent?.getIntExtra("zen_game_id", 0) ?: 0
+                if (zenGameId > 0) {
+                    webView.loadUrl("file:///android_asset/www/index.html?zen=$zenGameId&fullscreen=1")
+                } else {
+                    webView.loadUrl("file:///android_asset/www/index.html")
+                }
+            }
+
+            inner class AndroidBridge(private val ctx: Context) {
+                @JavascriptInterface
+                fun pinActiveGame(gameId: Int, gameName: String) {
+                    runOnUiThread {
+                        try {
+                            // 1. Save active game to SharedPreferences for the Native Widget
+                            val prefs = ctx.getSharedPreferences("aether_prefs", Context.MODE_PRIVATE)
+                            prefs.edit()
+                                .putInt("pinned_zen_id", gameId)
+                                .putString("pinned_zen_name", gameName)
+                                .apply()
+
+                            // 2. Refresh active AETHER widgets on launcher desktop
+                            val appWidgetManager = AppWidgetManager.getInstance(ctx)
+                            val component = ComponentName(ctx, AetherWidgetProvider::class.java)
+                            val ids = appWidgetManager.getAppWidgetIds(component)
+                            for (id in ids) {
+                                AetherWidgetProvider.updateAppWidget(ctx, appWidgetManager, id)
+                            }
+
+                            // 3. Request native Android 8.0+ Home Screen Widget Pinning
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                if (appWidgetManager.isRequestPinAppWidgetSupported) {
+                                    appWidgetManager.requestPinAppWidget(component, null, null)
+                                    Toast.makeText(
+                                        ctx,
+                                        "Добавление виджета игры #$gameId на рабочий стол...",
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    Toast.makeText(
+                                        ctx,
+                                        "Виджет обновлен! Зажмите пустой экран -> Виджеты -> AETHER",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                            } else {
+                                Toast.makeText(
+                                    ctx,
+                                    "Виджет AETHER обновлен с игрой #$gameId!",
+                                    Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }
+                }
             }
 
             override fun onBackPressed() {
@@ -97,7 +175,7 @@ jobs:
         }
         EOF
 
-        # 2. Исправленный виджет (заменен запрещенный тег View на ImageView)
+        # 2. Native Telemetry + Zen Game Widget Layout
         cat << 'EOF' > app/src/main/res/layout/widget_telemetry.xml
         <?xml version="1.0" encoding="utf-8"?>
         <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
@@ -147,7 +225,7 @@ jobs:
                     android:textStyle="bold" />
             </RelativeLayout>
 
-            <!-- 1px разделитель через ImageView (полная поддержка RemoteViews) -->
+            <!-- 1px Thin Divider -->
             <ImageView
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
@@ -155,6 +233,7 @@ jobs:
                 android:layout_marginBottom="10dp"
                 android:background="@color/border_dark" />
 
+            <!-- Telemetry Metrics Grid -->
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -265,19 +344,20 @@ jobs:
 
             </LinearLayout>
 
+            <!-- Zen Game Active Launcher Bar -->
             <TextView
                 android:id="@+id/widget_footer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="10dp"
                 android:fontFamily="monospace"
-                android:text="LINK: ACTIVE // OLED BLACK MATRIX"
-                android:textColor="@color/gray_dim"
-                android:textSize="8sp" />
+                android:text="▶ ZEN #14: SOLAR SYSTEM [ИГРАТЬ]"
+                android:textColor="@color/white"
+                android:textSize="9sp" />
         </LinearLayout>
         EOF
 
-        # 3. Безопасная тема оформления
+        # 3. OLED Themes
         cat << 'EOF' > app/src/main/res/values/themes.xml
         <?xml version="1.0" encoding="utf-8"?>
         <resources>
@@ -290,7 +370,7 @@ jobs:
         </resources>
         EOF
 
-        # 4. Исправленный манифест
+        # 4. Manifest
         cat << 'EOF' > app/src/main/AndroidManifest.xml
         <?xml version="1.0" encoding="utf-8"?>
         <manifest xmlns:android="http://schemas.android.com/apk/res/android">
@@ -332,7 +412,7 @@ jobs:
         </manifest>
         EOF
 
-        # 5. Метаданные виджета
+        # 5. Widget Provider Metadata
         cat << 'EOF' > app/src/main/res/xml/widget_telemetry_info.xml
         <?xml version="1.0" encoding="utf-8"?>
         <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
@@ -348,7 +428,7 @@ jobs:
             android:widgetCategory="home_screen" />
         EOF
 
-        # 6. Код провайдера с полной защитой от сбоев
+        # 6. Widget Provider with Zen Game Pinning & Telemetry
         cat << 'EOF' > app/src/main/java/com/aether/monitor/widget/AetherWidgetProvider.kt
         package com.aether.monitor.widget
 
@@ -389,11 +469,13 @@ jobs:
                 fun updateAppWidget(context: Context, mgr: AppWidgetManager, id: Int) {
                     val views = RemoteViews(context.packageName, R.layout.widget_telemetry)
 
+                    // 1. Digital Clock
                     try {
                         val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
                         views.setTextViewText(R.id.widget_clock, sdf.format(Date()))
                     } catch (e: Exception) {}
 
+                    // 2. Battery Telemetry
                     try {
                         val filter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
                         val bIntent = context.applicationContext.registerReceiver(null, filter)
@@ -409,6 +491,7 @@ jobs:
                         views.setTextViewText(R.id.widget_batt_sub, "[BATTERY]")
                     }
 
+                    // 3. RAM Memory
                     try {
                         val am = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
                         val mi = ActivityManager.MemoryInfo()
@@ -424,6 +507,7 @@ jobs:
                         views.setTextViewText(R.id.widget_ram_sub, "7.0 / 12 GB")
                     }
 
+                    // 4. Network Status
                     try {
                         val cm = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
                         val caps = cm.getNetworkCapabilities(cm.activeNetwork)
@@ -440,11 +524,27 @@ jobs:
                         views.setTextViewText(R.id.widget_net_sub, "ONLINE")
                     }
 
+                    // 5. Active Pinned Zen Game & Instant Launcher Click Intent
                     try {
+                        val prefs = context.getSharedPreferences("aether_prefs", Context.MODE_PRIVATE)
+                        val pinnedZenId = prefs.getInt("pinned_zen_id", 14)
+                        val pinnedZenName = prefs.getString("pinned_zen_name", "Solar System Gravity")
+
+                        views.setTextViewText(
+                            R.id.widget_footer,
+                            "▶ ZEN #${String.format("%02d", pinnedZenId)}: ${pinnedZenName?.uppercase()} [ИГРАТЬ]"
+                        )
+
                         val intent = Intent(context, MainActivity::class.java).apply {
                             flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
+                            putExtra("zen_game_id", pinnedZenId)
                         }
-                        val pi = PendingIntent.getActivity(context, 0, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
+                        val pi = PendingIntent.getActivity(
+                            context,
+                            pinnedZenId,
+                            intent,
+                            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                        )
                         views.setOnClickPendingIntent(R.id.widget_root, pi)
                     } catch (e: Exception) {}
 
@@ -454,7 +554,7 @@ jobs:
         }
         EOF
 
-        # 7. Конфигурация Gradle
+        # 7. Gradle Configuration
         cat << 'EOF' > settings.gradle.kts
         pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }
         dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }
@@ -490,8 +590,8 @@ jobs:
                 applicationId = "com.aether.monitor"
                 minSdk = 26
                 targetSdk = 34
-                versionCode = 2
-                versionName = "1.0.1"
+                versionCode = 3
+                versionName = "1.0.2"
             }
 
             buildTypes {
