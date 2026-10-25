@@ -38,79 +38,9 @@ jobs:
         cp widget_telemetry_info.xml app/src/main/res/xml/ 2>/dev/null || true
         cp widget_telemetry.xml app/src/main/res/layout/ 2>/dev/null || true
         cp MainActivity.kt app/src/main/java/com/aether/monitor/ 2>/dev/null || true
-        cp AetherWidgetProvider.kt app/src/main/java/com/aether/monitor/widget/ 2>/dev/null || true
+        cp AetherWidgetProvider.kt AetherAnimationService.kt app/src/main/java/com/aether/monitor/widget/ 2>/dev/null || true
+        cp AndroidManifest.xml app/src/main/ 2>/dev/null || true
         cp index.html app/src/main/assets/www/ 2>/dev/null || true
-
-        # Manifest
-        cat << 'EOF' > app/src/main/AndroidManifest.xml
-        <?xml version="1.0" encoding="utf-8"?>
-        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-            <uses-permission android:name="android.permission.INTERNET" />
-            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-            <uses-permission android:name="android.permission.VIBRATE" />
-
-            <application
-                android:allowBackup="true"
-                android:icon="@drawable/ic_concentric_logo"
-                android:label="@string/app_name"
-                android:supportsRtl="true"
-                android:theme="@style/Theme.AetherOLED">
-
-                <activity
-                    android:name=".MainActivity"
-                    android:exported="true"
-                    android:configChanges="orientation|screenSize|keyboardHidden"
-                    android:theme="@style/Theme.AetherOLED">
-                    <intent-filter>
-                        <action android:name="android.intent.action.MAIN" />
-                        <category android:name="android.intent.category.LAUNCHER" />
-                    </intent-filter>
-                </activity>
-
-                <receiver
-                    android:name=".widget.AetherWidgetProvider"
-                    android:exported="true"
-                    android:label="@string/widget_name">
-                    <intent-filter>
-                        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-                        <action android:name="android.intent.action.BATTERY_CHANGED" />
-                    </intent-filter>
-                    <meta-data
-                        android:name="android.appwidget.provider"
-                        android:resource="@xml/widget_telemetry_info" />
-                </receiver>
-            </application>
-        </manifest>
-        EOF
-
-        # Themes
-        cat << 'EOF' > app/src/main/res/values/themes.xml
-        <?xml version="1.0" encoding="utf-8"?>
-        <resources>
-            <style name="Theme.AetherOLED" parent="@android:style/Theme.NoTitleBar.Fullscreen">
-                <item name="android:windowBackground">@color/oled_black</item>
-                <item name="android:colorBackground">@color/oled_black</item>
-                <item name="android:statusBarColor">@color/oled_black</item>
-                <item name="android:navigationBarColor">@color/oled_black</item>
-            </style>
-        </resources>
-        EOF
-
-        # Widget info
-        cat << 'EOF' > app/src/main/res/xml/widget_telemetry_info.xml
-        <?xml version="1.0" encoding="utf-8"?>
-        <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
-            android:description="@string/widget_description"
-            android:initialLayout="@layout/widget_telemetry"
-            android:minWidth="250dp"
-            android:minHeight="110dp"
-            android:targetCellWidth="4"
-            android:targetCellHeight="2"
-            android:previewLayout="@layout/widget_telemetry"
-            android:resizeMode="horizontal|vertical"
-            android:updatePeriodMillis="1800000"
-            android:widgetCategory="home_screen" />
-        EOF
 
         # Gradle Configuration
         cat << 'EOF' > settings.gradle.kts
@@ -148,8 +78,8 @@ jobs:
                 applicationId = "com.aether.monitor"
                 minSdk = 26
                 targetSdk = 34
-                versionCode = 4
-                versionName = "1.0.3"
+                versionCode = 5
+                versionName = "1.0.4"
             }
 
             buildTypes {
