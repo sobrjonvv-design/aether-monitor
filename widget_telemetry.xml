@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_widget_oled"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="14dp">
 
     <!-- Header Row: Brand & Clock -->
     <RelativeLayout
@@ -21,8 +21,8 @@
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
                 android:src="@drawable/ic_concentric_logo" />
 
             <TextView
@@ -43,16 +43,16 @@
             android:fontFamily="monospace"
             android:text="00:00"
             android:textColor="@color/white"
-            android:textSize="22sp"
+            android:textSize="20sp"
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <!-- 1px Thin Divider (ImageView is 100% supported by RemoteViews, unlike View) -->
+    <!-- 1px Thin Divider -->
     <ImageView
         android:layout_width="match_parent"
         android:layout_height="1dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginBottom="10dp"
+        android:layout_marginTop="6dp"
+        android:layout_marginBottom="8dp"
         android:background="@color/border_dark" />
 
     <!-- 3-Metric Telemetry Grid -->
@@ -75,7 +75,7 @@
                 android:fontFamily="monospace"
                 android:text="BATTERY"
                 android:textColor="@color/gray_light"
-                android:textSize="9sp" />
+                android:textSize="8sp" />
 
             <TextView
                 android:id="@+id/widget_batt_val"
@@ -84,7 +84,7 @@
                 android:fontFamily="monospace"
                 android:text="--%"
                 android:textColor="@color/white"
-                android:textSize="17sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -94,7 +94,7 @@
                 android:fontFamily="monospace"
                 android:text="[BATTERY]"
                 android:textColor="@color/gray_dim"
-                android:textSize="8sp" />
+                android:textSize="7sp" />
         </LinearLayout>
 
         <!-- RAM Metric -->
@@ -110,7 +110,7 @@
                 android:fontFamily="monospace"
                 android:text="SYSTEM RAM"
                 android:textColor="@color/gray_light"
-                android:textSize="9sp" />
+                android:textSize="8sp" />
 
             <TextView
                 android:id="@+id/widget_ram_val"
@@ -119,7 +119,7 @@
                 android:fontFamily="monospace"
                 android:text="58%"
                 android:textColor="@color/white"
-                android:textSize="17sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -129,7 +129,7 @@
                 android:fontFamily="monospace"
                 android:text="7.0 / 12 GB"
                 android:textColor="@color/gray_dim"
-                android:textSize="8sp" />
+                android:textSize="7sp" />
         </LinearLayout>
 
         <!-- Network Carrier Metric -->
@@ -145,7 +145,7 @@
                 android:fontFamily="monospace"
                 android:text="NETWORK"
                 android:textColor="@color/gray_light"
-                android:textSize="9sp" />
+                android:textSize="8sp" />
 
             <TextView
                 android:id="@+id/widget_net_val"
@@ -154,7 +154,7 @@
                 android:fontFamily="monospace"
                 android:text="5G-NR"
                 android:textColor="@color/white"
-                android:textSize="17sp"
+                android:textSize="15sp"
                 android:textStyle="bold" />
 
             <TextView
@@ -162,21 +162,30 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:fontFamily="monospace"
-                android:text="STABLE"
+                android:text="ONLINE"
                 android:textColor="@color/gray_dim"
-                android:textSize="8sp" />
+                android:textSize="7sp" />
         </LinearLayout>
 
     </LinearLayout>
+
+    <!-- LIVE GAME GRAPHIC CANVAS (Real-Time OLED Noir Visual) -->
+    <ImageView
+        android:id="@+id/widget_game_canvas"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="6dp"
+        android:scaleType="fitCenter" />
 
     <!-- Pinned Zen Game Launcher Bar -->
     <TextView
         android:id="@+id/widget_footer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
         android:fontFamily="monospace"
-        android:text="▶ ZEN #14: SOLAR SYSTEM [ИГРАТЬ]"
+        android:text="▶ ZEN #13: EVENT HORIZON VORTEX [ИГРАТЬ]"
         android:textColor="@color/white"
         android:textSize="9sp" />
 
