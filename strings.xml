@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AETHER</string>
+    <string name="widget_name">AETHER 4x2 // Telemetry</string>
+    <string name="widget_description">Monochrome OLED Nothing-style System &amp; Network Telemetry Widget</string>
+</resources>

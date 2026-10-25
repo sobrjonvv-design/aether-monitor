@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="oled_black">#000000</color>
+    <color name="oled_surface">#0A0A0A</color>
+    <color name="white">#FFFFFF</color>
+    <color name="gray_light">#888888</color>
+    <color name="gray_dim">#555555</color>
+    <color name="border_dark">#222222</color>
+</resources>

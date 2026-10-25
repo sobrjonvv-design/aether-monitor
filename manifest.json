@@ -1,0 +1,63 @@
+{
+  "id": "aether-oled-monitor",
+  "name": "AETHER // OLED NET & SYS",
+  "short_name": "AETHER",
+  "description": "Ultra-minimalist OLED Black & White System and Network Telemetry Dashboard",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#000000",
+  "theme_color": "#000000",
+  "categories": ["utilities", "productivity"],
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Speed Test",
+      "short_name": "Speed",
+      "description": "Launch Network Bandwidth & Latency Test",
+      "url": "./index.html#screen-speed",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "System Resources",
+      "short_name": "System",
+      "description": "Live RAM, ROM and Battery Monitor",
+      "url": "./index.html#screen-system",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Traffic Tracker",
+      "short_name": "Traffic",
+      "description": "Daily and Monthly Data Consumption",
+      "url": "./index.html#screen-traffic",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Diagnostic Logs",
+      "short_name": "Logs",
+      "description": "Network Events and Ping Terminal",
+      "url": "./index.html#screen-logs",
+      "icons": [{ "src": "./icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

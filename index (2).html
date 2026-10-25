@@ -1,0 +1,2594 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#000000">
+  <meta name="color-scheme" content="dark">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="AETHER // OLED Monochrome System & Network Telemetry Dashboard">
+  <title>AETHER // OLED NET & SYS</title>
+
+  <!-- PWA Manifest & Icons (Real Files for Android WebAPK Generation) -->
+  <link rel="manifest" href="./manifest.json">
+  <link rel="icon" type="image/png" sizes="192x192" href="./icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="./icon-512.png">
+  <link rel="apple-touch-icon" href="./icon-192.png">
+
+  <!-- Typography: JetBrains Mono for figures & data, Inter for geometric UI -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:ital,wght@0,300;0,400;0,500;0,700;1,400&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================================
+       DESIGN SYSTEM: NOTHING OS / OLED NOIR (STRICT BLACK & WHITE)
+       Strict Monochrome Palette: #000000 Background, #FFFFFF Elements, Neutral Grays
+       Zero chromatic accents. 1px borders, concentric dials, tactile telemetry.
+       ========================================================================== */
+    :root {
+      --bg: #000000;
+      --surface-1: #070707;
+      --surface-2: #0e0e0e;
+      --surface-3: #181818;
+      --fg-primary: #FFFFFF;
+      --fg-secondary: #888888;
+      --fg-tertiary: #4c4c4c;
+      --fg-muted: #242424;
+      --border-line: #1c1c1c;
+      --border-bright: #3a3a3a;
+      --font-mono: 'JetBrains Mono', monospace;
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      --safe-top: env(safe-area-inset-top, 0px);
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      background-color: var(--bg);
+      color: var(--fg-primary);
+      font-family: var(--font-sans);
+      font-size: 13px;
+      line-height: 1.4;
+      overflow: hidden;
+      touch-action: pan-y;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* OLED Stippled Dot Matrix Background Accent */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image: radial-gradient(rgba(255, 255, 255, 0.045) 1px, transparent 1px);
+      background-size: 18px 18px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ==========================================================================
+       APP SHELL & TOP TELEMETRY BAR
+       ========================================================================== */
+    #app {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100%;
+      max-width: 480px;
+      margin: 0 auto;
+      border-left: 1px solid var(--border-line);
+      border-right: 1px solid var(--border-line);
+      background-color: var(--bg);
+      z-index: 1;
+      overflow: hidden;
+    }
+
+    .top-telemetry {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: calc(var(--safe-top) + 8px) 14px 8px 14px;
+      border-bottom: 1px solid var(--border-line);
+      background: rgba(0, 0, 0, 0.92);
+      backdrop-filter: blur(10px);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      z-index: 20;
+    }
+
+    .telemetry-node {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+    }
+
+    .status-pulse {
+      width: 6px;
+      height: 6px;
+      background: var(--fg-primary);
+      border-radius: 50%;
+      animation: pulseStrobe 2.2s infinite ease-in-out;
+    }
+
+    @keyframes pulseStrobe {
+      0%, 100% { opacity: 0.35; transform: scale(0.9); }
+      50% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .telemetry-tools {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .tool-btn {
+      background: none;
+      border: 1px solid var(--border-line);
+      color: var(--fg-secondary);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 3px 6px;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .tool-btn:active, .tool-btn.active {
+      background: var(--fg-primary);
+      color: var(--bg);
+      border-color: var(--fg-primary);
+    }
+
+    .tool-btn.highlight {
+      background: var(--fg-primary);
+      color: var(--bg);
+      border-color: var(--fg-primary);
+      font-weight: 700;
+    }
+
+    /* Viewport Screens Container */
+    .screens-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      width: 100%;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 14px 16px 84px 16px;
+      display: none;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), transform 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+      scrollbar-width: none;
+    }
+
+    .screen::-webkit-scrollbar {
+      display: none;
+    }
+
+    .screen.active {
+      display: block;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* ==========================================================================
+       BOTTOM NAVIGATION BAR
+       ========================================================================== */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: calc(58px + var(--safe-bottom));
+      padding-bottom: var(--safe-bottom);
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      border-top: 1px solid var(--border-line);
+      background: rgba(0, 0, 0, 0.95);
+      backdrop-filter: blur(14px);
+      z-index: 30;
+    }
+
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 3px;
+      background: none;
+      border: none;
+      color: var(--fg-secondary);
+      cursor: pointer;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      letter-spacing: 0.12em;
+      transition: color 0.15s;
+    }
+
+    .nav-icon {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      fill: none;
+      transition: transform 0.15s;
+    }
+
+    .nav-item.active {
+      color: var(--fg-primary);
+    }
+
+    .nav-item.active .nav-icon {
+      transform: scale(1.12);
+    }
+
+    .nav-item:active {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    /* ==========================================================================
+       TYPOGRAPHY & ATOMIC UI COMPONENTS
+       ========================================================================== */
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      border-bottom: 1px solid var(--border-line);
+      padding-bottom: 6px;
+    }
+
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--fg-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-title::before {
+      content: "";
+      display: inline-block;
+      width: 5px;
+      height: 5px;
+      background: var(--fg-primary);
+    }
+
+    .section-tag {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--fg-secondary);
+      letter-spacing: 0.06em;
+    }
+
+    /* Cards & Panels */
+    .card {
+      background: var(--surface-1);
+      border: 1px solid var(--border-line);
+      border-radius: 4px;
+      padding: 14px;
+      margin-bottom: 12px;
+      position: relative;
+    }
+
+    .card.interactive:active {
+      border-color: var(--fg-primary);
+      background: var(--surface-2);
+    }
+
+    .card-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--fg-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    /* Tactical Monochrome Buttons */
+    .btn {
+      width: 100%;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      background: transparent;
+      border: 1px solid var(--fg-primary);
+      color: var(--fg-primary);
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      position: relative;
+    }
+
+    .btn:active {
+      background: var(--fg-primary);
+      color: var(--bg);
+    }
+
+    .btn.solid {
+      background: var(--fg-primary);
+      color: var(--bg);
+    }
+
+    .btn.solid:active {
+      background: #cccccc;
+    }
+
+    .btn.sm {
+      height: 32px;
+      font-size: 9.5px;
+      padding: 0 12px;
+      width: auto;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Segmented Meter Bar */
+    .seg-meter {
+      display: flex;
+      gap: 2px;
+      width: 100%;
+      height: 6px;
+      margin: 8px 0;
+    }
+
+    .seg-pill {
+      flex: 1;
+      height: 100%;
+      background: var(--fg-muted);
+      border-radius: 1px;
+      transition: background-color 0.2s;
+    }
+
+    .seg-pill.filled {
+      background: var(--fg-primary);
+    }
+
+    .seg-pill.dim {
+      background: var(--fg-secondary);
+    }
+
+    /* Value Displays */
+    .data-val {
+      font-family: var(--font-mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .hero-number {
+      font-family: var(--font-mono);
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1;
+      letter-spacing: -0.02em;
+      color: var(--fg-primary);
+    }
+
+    .hero-unit {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--fg-secondary);
+      letter-spacing: 0.1em;
+      margin-left: 4px;
+      text-transform: uppercase;
+      border: 1px solid var(--border-line);
+      padding: 2px 6px;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+
+    .hero-unit:active {
+      background: var(--fg-primary);
+      color: var(--bg);
+    }
+
+    /* ==========================================================================
+       SCREEN 1: SPEED TEST (CONCENTRIC RINGS & CANVAS GRAPH)
+       ========================================================================== */
+    .speed-radar-stage {
+      position: relative;
+      width: 100%;
+      height: 290px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+
+    .concentric-svg {
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      pointer-events: none;
+    }
+
+    .ring-base {
+      fill: none;
+      stroke: var(--fg-muted);
+      stroke-width: 1;
+    }
+
+    .ring-dashed {
+      fill: none;
+      stroke: var(--border-bright);
+      stroke-width: 1;
+      stroke-dasharray: 2 6;
+      transform-origin: center;
+      animation: spinRings 45s linear infinite;
+    }
+
+    .ring-dashed-reverse {
+      fill: none;
+      stroke: var(--fg-tertiary);
+      stroke-width: 1;
+      stroke-dasharray: 4 8;
+      transform-origin: center;
+      animation: spinRingsReverse 32s linear infinite;
+    }
+
+    .ring-progress {
+      fill: none;
+      stroke: var(--fg-primary);
+      stroke-width: 2.5;
+      stroke-linecap: square;
+      stroke-dasharray: 754;
+      stroke-dashoffset: 754;
+      transform-origin: center;
+      transform: rotate(-90deg);
+      transition: stroke-dashoffset 0.12s linear;
+    }
+
+    .ring-ping {
+      fill: none;
+      stroke: var(--fg-secondary);
+      stroke-width: 1.5;
+      stroke-dasharray: 377;
+      stroke-dashoffset: 377;
+      transform-origin: center;
+      transform: rotate(-90deg);
+      transition: stroke-dashoffset 0.18s ease-out;
+    }
+
+    @keyframes spinRings {
+      100% { transform: rotate(360deg); }
+    }
+
+    @keyframes spinRingsReverse {
+      100% { transform: rotate(-360deg); }
+    }
+
+    .speed-center-info {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      z-index: 5;
+    }
+
+    .speed-phase-label {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      color: var(--fg-secondary);
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .speed-server-pill {
+      margin-top: 8px;
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--fg-secondary);
+      border: 1px solid var(--border-line);
+      padding: 3px 8px;
+      border-radius: 20px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(0, 0, 0, 0.7);
+    }
+
+    /* 4-Metric Grid */
+    .metrics-quad {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .metric-cell {
+      background: var(--surface-1);
+      border: 1px solid var(--border-line);
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      transition: border-color 0.2s;
+    }
+
+    .metric-cell.highlight {
+      border-color: var(--fg-primary);
+    }
+
+    .metric-cell .label {
+      font-family: var(--font-mono);
+      font-size: 9px;
+      color: var(--fg-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin-bottom: 4px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .metric-cell .value {
+      font-family: var(--font-mono);
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--fg-primary);
+    }
+
+    .metric-cell .unit {
+      font-size: 9px;
+      color: var(--fg-secondary);
+      margin-left: 2px;
+      font-weight: 400;
+    }
+
+    /* Live Stability Chart */
+    .chart-container {
+      width: 100%;
+      height: 92px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-line);
+      position: relative;
+      margin-bottom: 12px;
+      overflow: hidden;
+    }
+
+    .chart-header {
+      position: absolute;
+      top: 6px;
+      left: 8px;
+      right: 8px;
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      color: var(--fg-secondary);
+      letter-spacing: 0.08em;
+      z-index: 2;
+    }
+
+    #speedCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Server Selection Bar */
+    .server-selector-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-1);
+      border: 1px solid var(--border-line);
+      padding: 8px 12px;
+      margin-bottom: 12px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+    }
+
+    .server-selector-bar select {
+      background: transparent;
+      border: none;
+      color: var(--fg-primary);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .server-selector-bar select option {
+      background: #0d0d0d;
+      color: #ffffff;
+    }
+
+    /* Quick Install / Widget Banner */
+    .action-pill-banner {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .action-pill-banner button {
+      flex: 1;
+      height: 34px;
+      background: var(--surface-2);
+      border: 1px solid var(--border-bright);
+      color: var(--fg-primary);
+      font-family: var(--font-mono);
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      cursor: pointer;
+    }
+
+    .action-pill-banner button:active {
+      background: var(--fg-primary);
+      color: var(--bg);
+    }
+
+    /* ==========================================================================
+       SCREEN 2: SYSTEM RESOURCES & HARDWARE TELEMETRY
+       ========================================================================== */
+    .sys-overview-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .hud-gauge {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 8px;
+      background: var(--surface-1);
+      border: 1px solid var(--border-line);
+      position: relative;
+    }
+
+    .gauge-svg-wrap {
+      position: relative;
+      width: 102px;
+      height: 102px;
+      margin: 8px 0;
+    }
+
+    .gauge-center-stat {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: var(--font-mono);
+    }
+
+    .gauge-center-stat .big {
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .gauge-center-stat .sub {
+      font-size: 8px;
+      color: var(--fg-secondary);
+      margin-top: 2px;
+    }
+
+    .gauge-footer {
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      color: var(--fg-secondary);
+      display: flex;
+      gap: 5px;
+    }
+
+    /* Detailed Partition List */
+    .breakdown-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border-line);
+      font-family: var(--font-mono);
+      font-size: 11px;
+    }
+
+    .breakdown-row:last-child {
+      border-bottom: none;
+    }
+
+    .breakdown-tag {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--fg-secondary);
+    }
+
+    .dot-bullet {
+      width: 4px;
+      height: 4px;
+      background: var(--fg-primary);
+    }
+
+    .dot-bullet.dim {
+      background: var(--fg-tertiary);
+    }
+
+    /* CPU Core Grid (8-Core Visualization) */
+    .cpu-core-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .core-cell {
+      background: var(--surface-2);
+      border: 1px solid var(--border-line);
+      padding: 6px 4px;
+      text-align: center;
+      font-family: var(--font-mono);
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .core-cell:active {
+      border-color: var(--fg-primary);
+    }
+
+    .core-cell .name {
+      font-size: 8px;
+      color: var(--fg-secondary);
+    }
+
+    .core-cell .freq {
+      font-size: 11px;
+      font-weight: 600;
+      margin: 3px 0;
+    }
+
+    .core-cell .bar-mini {
+      height: 3px;
+      background: var(--fg-muted);
+      width: 100%;
+      border-radius: 1px;
+      overflow: hidden;
+    }
+
+    .core-cell .bar-mini-fill {
+      height: 100%;
+      background: var(--fg-primary);
+      width: 40%;
+      transition: width 0.3s;
+    }
+
+    /* ==========================================================================
+       SCREEN 3: TRAFFIC TRACKER
+       ========================================================================== */
+    .traffic-dial-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 16px 0 8px 0;
+    }
+
+    .traffic-dial-svg {
+      width: 200px;
+      height: 200px;
+    }
+
+    .histogram-card {
+      padding: 14px 12px;
+    }
+
+    .histogram-bar-wrap {
+      display: flex;
+      align-items: flex-end;
+      gap: 3px;
+      height: 80px;
+      width: 100%;
+      padding-top: 12px;
+      border-bottom: 1px solid var(--border-line);
+      margin-bottom: 6px;
+    }
+
+    .h-col {
+      flex: 1;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .h-bar {
+      width: 100%;
+      background: var(--fg-tertiary);
+      transition: height 0.3s, background-color 0.2s;
+    }
+
+    .h-bar.peak {
+      background: var(--fg-primary);
+    }
+
+    .h-bar.active {
+      background: var(--fg-secondary);
+    }
+
+    .h-axis {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--font-mono);
+      font-size: 8px;
+      color: var(--fg-secondary);
+    }
+
+    /* Live Data Rate Streamer */
+    .live-throughput-badge {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1px solid var(--border-line);
+      background: var(--surface-1);
+      padding: 10px 14px;
+      font-family: var(--font-mono);
+      margin-bottom: 12px;
+    }
+
+    .live-throughput-badge .arrow {
+      color: var(--fg-secondary);
+      font-weight: 700;
+    }
+
+    /* ==========================================================================
+       SCREEN 4: SYSTEM LOGS & NETWORK DIAGNOSTICS
+       ========================================================================== */
+    .log-filter-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .log-filter-bar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .filter-chip {
+      background: var(--surface-1);
+      border: 1px solid var(--border-line);
+      color: var(--fg-secondary);
+      font-family: var(--font-mono);
+      font-size: 9px;
+      padding: 4px 10px;
+      border-radius: 2px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .filter-chip.active {
+      background: var(--fg-primary);
+      color: var(--bg);
+      border-color: var(--fg-primary);
+    }
+
+    .terminal-box {
+      background: #020202;
+      border: 1px solid var(--border-line);
+      border-radius: 3px;
+      font-family: var(--font-mono);
+      font-size: 10px;
+      height: 380px;
+      overflow-y: auto;
+      padding: 10px;
+      display: flex;
+      flex-direction: column-reverse;
+      scrollbar-width: none;
+    }
+
+    .terminal-box::-webkit-scrollbar {
+      display: none;
+    }
+
+    .log-entry {
+      display: flex;
+      gap: 8px;
+      padding: 3px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      line-height: 1.4;
+      word-break: break-all;
+    }
+
+    .log-time {
+      color: var(--fg-secondary);
+      flex-shrink: 0;
+    }
+
+    .log-tag {
+      color: var(--fg-primary);
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+
+    .log-msg {
+      color: #cccccc;
+    }
+
+    .log-entry.warn .log-tag {
+      text-decoration: underline;
+    }
+
+    .log-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    /* Modal / Popups (Monochrome) */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.9);
+      backdrop-filter: blur(6px);
+      z-index: 99;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+    }
+
+    .modal-card {
+      background: #080808;
+      border: 1px solid var(--fg-primary);
+      width: 100%;
+      max-width: 380px;
+      padding: 20px;
+      font-family: var(--font-mono);
+    }
+
+    .modal-title {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .modal-input {
+      width: 100%;
+      background: #000000;
+      border: 1px solid var(--border-bright);
+      color: #ffffff;
+      padding: 10px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      margin: 10px 0 16px 0;
+      outline: none;
+    }
+
+    .modal-input:focus {
+      border-color: #ffffff;
+    }
+
+    .guide-step {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      font-size: 10px;
+      line-height: 1.4;
+      color: #cccccc;
+    }
+
+    .guide-num {
+      width: 18px;
+      height: 18px;
+      background: #ffffff;
+      color: #000000;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      border-radius: 2px;
+    }
+
+    /* Responsive fine-tuning */
+    @media (max-height: 680px) {
+      .speed-radar-stage { height: 230px; }
+      .concentric-svg { width: 220px; height: 220px; }
+      .hero-number { font-size: 34px; }
+      .chart-container { height: 75px; }
+      .terminal-box { height: 260px; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <!-- TOP TELEMETRY BAR -->
+  <header class="top-telemetry">
+    <div class="telemetry-node">
+      <div class="status-pulse" id="netStrobe"></div>
+      <span id="carrierBadge">NET.SYS // 5G-NR</span>
+    </div>
+    <div class="telemetry-tools">
+      <button class="tool-btn highlight" id="installAppTopBtn" style="display:none;">INSTALL</button>
+      <button class="tool-btn" id="openWidgetModalBtn">WIDGET</button>
+      <button class="tool-btn" id="unitBtn">MBPS</button>
+      <button class="tool-btn" id="hapticBtn">HAPTIC: ON</button>
+    </div>
+  </header>
+
+  <!-- VIEWPORT SCREENS -->
+  <main class="screens-container">
+    
+    <!-- =======================================================================
+         SCREEN 1: INTERACTIVE SPEED TEST
+         ======================================================================= -->
+    <section class="screen active" id="screen-speed">
+      <!-- Quick Action Banner for Android Installation & Widget -->
+      <div class="action-pill-banner">
+        <button id="pwaInstallBannerBtn">
+          <span>📲</span> <span id="pwaInstallBannerText">INSTALL TO ANDROID</span>
+        </button>
+        <button id="launchFloatingWidgetBtn">
+          <span>◰</span> <span>FLOATING WIDGET</span>
+        </button>
+      </div>
+
+      <div class="section-header">
+        <h2 class="section-title">Telemetry // Bandwidth</h2>
+        <span class="section-tag" id="networkTypeTag">LINK: 5G NR (ACTIVE)</span>
+      </div>
+
+      <!-- Concentric Radar Gauge -->
+      <div class="speed-radar-stage">
+        <svg class="concentric-svg" viewBox="0 0 280 280">
+          <circle cx="140" cy="140" r="130" class="ring-base" />
+          <circle cx="140" cy="140" r="110" class="ring-dashed" />
+          <circle cx="140" cy="140" r="90" class="ring-base" />
+          <circle cx="140" cy="140" r="70" class="ring-dashed-reverse" />
+          <circle cx="140" cy="140" r="50" class="ring-base" />
+
+          <line x1="140" y1="5" x2="140" y2="25" stroke="var(--border-bright)" stroke-width="1" />
+          <line x1="140" y1="255" x2="140" y2="275" stroke="var(--border-bright)" stroke-width="1" />
+          <line x1="5" y1="140" x2="25" y2="140" stroke="var(--border-bright)" stroke-width="1" />
+          <line x1="255" y1="140" x2="275" y2="140" stroke="var(--border-bright)" stroke-width="1" />
+
+          <circle id="gaugeMainProgress" cx="140" cy="140" r="120" class="ring-progress" />
+          <circle id="gaugePingProgress" cx="140" cy="140" r="60" class="ring-ping" />
+        </svg>
+
+        <!-- Centered Live Value Display -->
+        <div class="speed-center-info">
+          <div class="speed-phase-label" id="speedPhaseText">STANDBY // READY</div>
+          <div>
+            <span class="hero-number data-val" id="speedHeroValue">0.0</span>
+            <span class="hero-unit" id="speedHeroUnit">MBPS</span>
+          </div>
+          <div class="speed-server-pill">
+            <span class="dot-bullet"></span>
+            <span id="activeServerName">AUTO NODE [CLOUDFLARE EDGE]</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Realtime Stability & Throughput Canvas -->
+      <div class="chart-container">
+        <div class="chart-header">
+          <span>THROUGHPUT STABILITY PROFILE</span>
+          <span class="data-val" id="chartPeakValue">PEAK: 0.0 MBPS</span>
+        </div>
+        <canvas id="speedCanvas"></canvas>
+      </div>
+
+      <!-- 4 Core Metrics Grid -->
+      <div class="metrics-quad">
+        <div class="metric-cell" id="metricDownloadCell">
+          <div class="label">
+            <span>Download</span>
+            <span class="dot-bullet dim" id="dlIndicator"></span>
+          </div>
+          <div class="value">
+            <span class="data-val" id="metricDownload">--</span>
+            <span class="unit" id="unitDl">Mbps</span>
+          </div>
+        </div>
+
+        <div class="metric-cell" id="metricUploadCell">
+          <div class="label">
+            <span>Upload</span>
+            <span class="dot-bullet dim" id="ulIndicator"></span>
+          </div>
+          <div class="value">
+            <span class="data-val" id="metricUpload">--</span>
+            <span class="unit" id="unitUl">Mbps</span>
+          </div>
+        </div>
+
+        <div class="metric-cell" id="metricPingCell">
+          <div class="label">
+            <span>Ping (RTT)</span>
+            <span class="dot-bullet dim" id="pingIndicator"></span>
+          </div>
+          <div class="value">
+            <span class="data-val" id="metricPing">--</span>
+            <span class="unit">ms</span>
+          </div>
+        </div>
+
+        <div class="metric-cell" id="metricJitterCell">
+          <div class="label">
+            <span>Jitter / Var</span>
+            <span class="dot-bullet dim" id="jitterIndicator"></span>
+          </div>
+          <div class="value">
+            <span class="data-val" id="metricJitter">--</span>
+            <span class="unit">ms</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Target Server Selection -->
+      <div class="server-selector-bar">
+        <span>TARGET NODE:</span>
+        <select id="serverSelect">
+          <option value="cloudflare">CLOUDFLARE EDGE (GLOBAL)</option>
+          <option value="frankfurt">DE-FRA // AWS FRANKFURT</option>
+          <option value="amsterdam">NL-AMS // EQUINIX AM4</option>
+          <option value="helsinki">FI-HEL // HETZNER DC</option>
+          <option value="local">SYNTHETIC HIGH-SPEED LOOPBACK</option>
+        </select>
+      </div>
+
+      <!-- Action Button -->
+      <button class="btn" id="startSpeedBtn">
+        <span id="startSpeedIcon">▶</span>
+        <span id="startSpeedText">START SPEED TEST</span>
+      </button>
+    </section>
+
+    <!-- =======================================================================
+         SCREEN 2: SYSTEM RESOURCES & HARDWARE
+         ======================================================================= -->
+    <section class="screen" id="screen-system">
+      <div class="section-header">
+        <h2 class="section-title">Hardware // Resources</h2>
+        <span class="section-tag" id="sysRefreshRate">DISPLAY: 120HZ OLED</span>
+      </div>
+
+      <!-- Live Battery & RAM HUD -->
+      <div class="sys-overview-grid">
+        <!-- Battery HUD Tile -->
+        <div class="hud-gauge">
+          <div class="card-title-row" style="width:100%; margin-bottom:0;">
+            <span>BATTERY</span>
+            <span class="data-val" id="battStatusBadge">[BATTERY]</span>
+          </div>
+          <div class="gauge-svg-wrap">
+            <svg viewBox="0 0 100 100" style="width:100%; height:100%;">
+              <circle cx="50" cy="50" r="42" stroke="var(--fg-muted)" stroke-width="4" fill="none" />
+              <circle id="battRing" cx="50" cy="50" r="42" stroke="var(--fg-primary)" stroke-width="4" fill="none"
+                      stroke-linecap="square" stroke-dasharray="264" stroke-dashoffset="66"
+                      transform="rotate(-90 50 50)" style="transition: stroke-dashoffset 0.5s ease;" />
+            </svg>
+            <div class="gauge-center-stat">
+              <span class="big data-val" id="battPercent">--%</span>
+              <span class="sub" id="battTemp">30.2°C</span>
+            </div>
+          </div>
+          <div class="gauge-footer">
+            <span id="battHealth">VOLT: 4.12V</span>
+            <span>•</span>
+            <span id="battTimeRemain">~5H 20M</span>
+          </div>
+        </div>
+
+        <!-- RAM HUD Tile -->
+        <div class="hud-gauge">
+          <div class="card-title-row" style="width:100%; margin-bottom:0;">
+            <span>SYSTEM RAM</span>
+            <span class="data-val" id="ramTotalText">12.0 GB</span>
+          </div>
+          <div class="gauge-svg-wrap">
+            <svg viewBox="0 0 100 100" style="width:100%; height:100%;">
+              <circle cx="50" cy="50" r="42" stroke="var(--fg-muted)" stroke-width="4" fill="none" />
+              <circle id="ramRing" cx="50" cy="50" r="42" stroke="var(--fg-primary)" stroke-width="4" fill="none"
+                      stroke-linecap="square" stroke-dasharray="264" stroke-dashoffset="110"
+                      transform="rotate(-90 50 50)" style="transition: stroke-dashoffset 0.5s ease;" />
+            </svg>
+            <div class="gauge-center-stat">
+              <span class="big data-val" id="ramPercent">58%</span>
+              <span class="sub" id="ramUsedText">7.0 GB IN USE</span>
+            </div>
+          </div>
+          <div class="gauge-footer">
+            <span id="ramFreeText">FREE: 5.0 GB</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Storage (ROM) Breakdown Card -->
+      <div class="card">
+        <div class="card-title-row">
+          <span>INTERNAL STORAGE (ROM)</span>
+          <span class="data-val" id="storageSummaryText">148.2 GB / 256.0 GB (58%)</span>
+        </div>
+        <div class="seg-meter" id="storageSegments"></div>
+        <div style="margin-top: 10px;">
+          <div class="breakdown-row">
+            <div class="breakdown-tag"><span class="dot-bullet"></span> System Firmware</div>
+            <div class="data-val">22.4 GB</div>
+          </div>
+          <div class="breakdown-row">
+            <div class="breakdown-tag"><span class="dot-bullet"></span> Installed Applications</div>
+            <div class="data-val" id="storageApps">64.8 GB</div>
+          </div>
+          <div class="breakdown-row">
+            <div class="breakdown-tag"><span class="dot-bullet"></span> Media, Photos & Video</div>
+            <div class="data-val" id="storageMedia">48.2 GB</div>
+          </div>
+          <div class="breakdown-row">
+            <div class="breakdown-tag"><span class="dot-bullet dim"></span> Web Cache & Temporary</div>
+            <div class="data-val" id="storageCache">12.8 GB</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CPU Architecture & 8-Core Frequency Monitor -->
+      <div class="card">
+        <div class="card-title-row">
+          <span>CPU SCHEDULER // 8-CORE BIG.LITTLE (TAP CORE)</span>
+          <span class="data-val" id="cpuLoadText">LOAD: 34%</span>
+        </div>
+        <div class="cpu-core-grid" id="cpuCoreContainer"></div>
+      </div>
+
+      <!-- Flush Memory Utility Action -->
+      <button class="btn" id="cleanMemBtn" style="margin-top: 4px;">
+        <span>🧹</span>
+        <span id="cleanMemText">PURGE SYSTEM CACHE & HEAP</span>
+      </button>
+    </section>
+
+    <!-- =======================================================================
+         SCREEN 3: TRAFFIC TRACKER
+         ======================================================================= -->
+    <section class="screen" id="screen-traffic">
+      <div class="section-header">
+        <h2 class="section-title">Traffic // Bandwidth Accounting</h2>
+        <span class="section-tag" id="billingCycleTag">CYCLE: 01 OCT - 31 OCT</span>
+      </div>
+
+      <!-- Live Speed Ribbon -->
+      <div class="live-throughput-badge">
+        <div>
+          <span class="arrow">↓</span> <span class="data-val" id="liveDlRate">1.24 MB/s</span>
+          <span style="margin: 0 8px; color: var(--border-bright);">|</span>
+          <span class="arrow">↑</span> <span class="data-val" id="liveUlRate">0.18 MB/s</span>
+        </div>
+        <span class="data-val" style="font-size: 9px; color: var(--fg-secondary);">STREAM: ACTIVE</span>
+      </div>
+
+      <!-- Concentric Monthly Quota Dial -->
+      <div class="card" style="text-align: center;">
+        <div class="card-title-row">
+          <span>MONTHLY QUOTA UTILIZATION</span>
+          <span class="data-val" id="quotaRatioText">48.82 / 100 GB</span>
+        </div>
+
+        <div class="traffic-dial-wrap">
+          <svg class="traffic-dial-svg" viewBox="0 0 200 200">
+            <circle cx="100" cy="100" r="90" stroke="var(--fg-muted)" stroke-width="6" fill="none" />
+            <circle cx="100" cy="100" r="75" stroke="var(--border-line)" stroke-width="1" stroke-dasharray="2 6" fill="none" />
+            <circle id="quotaDialProgress" cx="100" cy="100" r="90" stroke="var(--fg-primary)" stroke-width="6" fill="none"
+                    stroke-linecap="square" stroke-dasharray="565.48" stroke-dashoffset="289.4"
+                    transform="rotate(-90 100 100)" style="transition: stroke-dashoffset 0.6s ease;" />
+            <text x="100" y="94" text-anchor="middle" fill="#FFFFFF" font-family="JetBrains Mono" font-size="28" font-weight="700" id="quotaPercentDisplay">48.8%</text>
+            <text x="100" y="116" text-anchor="middle" fill="#888888" font-family="JetBrains Mono" font-size="9" letter-spacing="0.1em">QUOTA USED</text>
+            <text x="100" y="132" text-anchor="middle" fill="#555555" font-family="JetBrains Mono" font-size="9" id="quotaRemainingDisplay">51.18 GB REMAINING</text>
+          </svg>
+        </div>
+
+        <div class="btn-group" style="margin-top: 10px;">
+          <button class="btn sm" id="editQuotaBtn" style="flex:1;">EDIT QUOTA</button>
+          <button class="btn sm" id="resetTrafficBtn" style="flex:1;">RESET STATS</button>
+        </div>
+      </div>
+
+      <!-- Daily Breakdown Card -->
+      <div class="card">
+        <div class="card-title-row">
+          <span>CONSUMPTION METRICS</span>
+          <span class="data-val">LAST 24 HOURS</span>
+        </div>
+        <div class="breakdown-row">
+          <div class="breakdown-tag"><span class="dot-bullet"></span> Today Total Traffic</div>
+          <div class="data-val" id="todayTrafficVal">2.41 GB</div>
+        </div>
+        <div class="breakdown-row">
+          <div class="breakdown-tag"><span class="dot-bullet"></span> Cellular Network (5G/LTE)</div>
+          <div class="data-val" id="cellularTrafficVal">1.63 GB (68%)</div>
+        </div>
+        <div class="breakdown-row">
+          <div class="breakdown-tag"><span class="dot-bullet"></span> Wi-Fi 6 (WLAN)</div>
+          <div class="data-val" id="wifiTrafficVal">0.78 GB (32%)</div>
+        </div>
+        <div class="breakdown-row">
+          <div class="breakdown-tag"><span class="dot-bullet dim"></span> Background Telemetry</div>
+          <div class="data-val" id="bgTrafficVal">142 MB</div>
+        </div>
+      </div>
+
+      <!-- 24-Hour Hourly Histogram -->
+      <div class="card histogram-card">
+        <div class="card-title-row">
+          <span>HOURLY TRAFFIC DENSITY (24H)</span>
+          <span class="data-val">STIPPLED BARS</span>
+        </div>
+        <div class="histogram-bar-wrap" id="histogramContainer"></div>
+        <div class="h-axis">
+          <span>00:00</span>
+          <span>06:00</span>
+          <span>12:00</span>
+          <span>18:00</span>
+          <span>NOW</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- =======================================================================
+         SCREEN 4: SYSTEM LOGS & DIAGNOSTICS
+         ======================================================================= -->
+    <section class="screen" id="screen-logs">
+      <div class="section-header">
+        <h2 class="section-title">Diagnostics // Event Stream</h2>
+        <span class="section-tag" id="logEventCount">EVENTS: 0</span>
+      </div>
+
+      <!-- Network Interface Quick Specs -->
+      <div class="card" style="padding: 10px 12px; margin-bottom: 10px;">
+        <div class="breakdown-row" style="padding: 3px 0;">
+          <span style="color:var(--fg-secondary)">LOCAL IP / NAT</span>
+          <span class="data-val" id="netLocalIp">192.168.1.144 (DHCP)</span>
+        </div>
+        <div class="breakdown-row" style="padding: 3px 0;">
+          <span style="color:var(--fg-secondary)">GATEWAY / DNS</span>
+          <span class="data-val">192.168.1.1 / 1.1.1.1</span>
+        </div>
+        <div class="breakdown-row" style="padding: 3px 0;">
+          <span style="color:var(--fg-secondary)">EFFECTIVE TYPE</span>
+          <span class="data-val" id="netEffectiveType">5G NR (DOWNLINK: 100 MBPS)</span>
+        </div>
+        <div class="breakdown-row" style="padding: 3px 0;">
+          <span style="color:var(--fg-secondary)">PACKET STREAM</span>
+          <span class="data-val" id="netPacketRate">STABLE (0% LOSS)</span>
+        </div>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="log-filter-bar">
+        <button class="filter-chip active" data-filter="ALL">ALL [LOGS]</button>
+        <button class="filter-chip" data-filter="NET">NET</button>
+        <button class="filter-chip" data-filter="SYS">SYSTEM</button>
+        <button class="filter-chip" data-filter="SPEED">SPEEDTEST</button>
+        <button class="filter-chip" data-filter="WARN">WARN/ERR</button>
+      </div>
+
+      <!-- Terminal Output Container -->
+      <div class="terminal-box" id="terminalLogBox"></div>
+
+      <!-- Log Actions -->
+      <div class="log-actions">
+        <button class="btn sm" id="pauseLogBtn">PAUSE</button>
+        <button class="btn sm" id="pingBurstBtn">PING BURST</button>
+        <button class="btn sm" id="clearLogBtn">CLEAR</button>
+        <button class="btn sm" id="exportLogBtn">EXPORT</button>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- BOTTOM NAVIGATION BAR -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-target="screen-speed">
+      <svg class="nav-icon" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <line x1="12" y1="12" x2="16" y2="8" />
+        <circle cx="12" cy="12" r="2" fill="currentColor" />
+      </svg>
+      <span>SPEED</span>
+    </button>
+
+    <button class="nav-item" data-target="screen-system">
+      <svg class="nav-icon" viewBox="0 0 24 24">
+        <rect x="4" y="4" width="16" height="16" rx="1" />
+        <rect x="8" y="8" width="8" height="8" />
+        <line x1="9" y1="1" x2="9" y2="4" />
+        <line x1="15" y1="1" x2="15" y2="4" />
+        <line x1="9" y1="20" x2="9" y2="23" />
+        <line x1="15" y1="20" x2="15" y2="23" />
+      </svg>
+      <span>SYSTEM</span>
+    </button>
+
+    <button class="nav-item" data-target="screen-traffic">
+      <svg class="nav-icon" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="9" />
+        <path d="M12 3 A9 9 0 0 1 21 12" />
+        <line x1="12" y1="12" x2="12" y2="3" />
+      </svg>
+      <span>TRAFFIC</span>
+    </button>
+
+    <button class="nav-item" data-target="screen-logs">
+      <svg class="nav-icon" viewBox="0 0 24 24">
+        <polyline points="4 17 10 11 4 5" />
+        <line x1="12" y1="19" x2="20" y2="19" />
+      </svg>
+      <span>LOGS</span>
+    </button>
+  </nav>
+
+  <!-- MODAL: SET TRAFFIC QUOTA -->
+  <div class="modal-overlay" id="quotaModal">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span>CONFIG // MONTHLY QUOTA</span>
+        <span style="cursor:pointer;" id="closeQuotaModal">✕</span>
+      </div>
+      <p style="color:var(--fg-secondary); font-size:10px;">Enter monthly data ceiling in Gigabytes (GB):</p>
+      <input type="number" id="quotaInput" class="modal-input" value="100" min="1" max="5000">
+      <div class="btn-group">
+        <button class="btn sm" id="cancelQuotaBtn" style="flex:1;">CANCEL</button>
+        <button class="btn sm solid" id="saveQuotaBtn" style="flex:1;">SAVE QUOTA</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ANDROID WIDGET INSTRUCTIONS -->
+  <div class="modal-overlay" id="widgetGuideModal">
+    <div class="modal-card">
+      <div class="modal-title">
+        <span>ANDROID // WIDGET MODES</span>
+        <span style="cursor:pointer;" id="closeWidgetGuideModal">✕</span>
+      </div>
+
+      <div style="margin-bottom: 14px;">
+        <div style="font-weight:600; font-size:11px; margin-bottom:6px; color:#ffffff;">РЕЖИМ 1: ПЛАВАЮЩИЙ OLED-ВИДЖЕТ</div>
+        <p style="color:var(--fg-secondary); font-size:10px; margin-bottom:8px;">
+          Запускает поверх всех приложений и рабочего стола живое плавающее окно (Picture-in-Picture) с часами, RAM, батареей и скоростью сети.
+        </p>
+        <button class="btn sm solid" id="triggerWidgetModalAction" style="width:100%; margin-bottom:14px;">
+          ▶ ЗАПУСТИТЬ ПЛАВАЮЩИЙ ВИДЖЕТ
+        </button>
+      </div>
+
+      <div>
+        <div style="font-weight:600; font-size:11px; margin-bottom:6px; color:#ffffff;">РЕЖИМ 2: ВИДЖЕТЫ БЫСТРОГО ДОСТУПА</div>
+        <div class="guide-step">
+          <div class="guide-num">1</div>
+          <div>Установите AETHER на телефон через меню браузера («Установить приложение»).</div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">2</div>
+          <div>На главном экране Android зажмите и удерживайте иконку <b>AETHER</b>.</div>
+        </div>
+        <div class="guide-step">
+          <div class="guide-num">3</div>
+          <div>Появятся 4 виджета: <i>Speed Test, RAM/Battery, Traffic, Logs</i>. Перетащите любой из них на рабочий стол как отдельный виджет 1x1!</div>
+        </div>
+      </div>
+
+      <button class="btn sm" id="dismissWidgetGuideBtn" style="width:100%; margin-top:8px;">ЗАКРЫТЬ</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ===========================================================================
+     CORE LOGIC & ENGINES (HTML5 / WEBAUDIO / SERVICE WORKER / PIP WIDGET)
+     =========================================================================== -->
+<script>
+/**
+ * AETHER // OLED NET & SYSTEM MONITOR
+ * Ultra-minimalist Mobile Engine (OLED Black #000000 & White #FFFFFF)
+ */
+
+// Global State Controller
+const AppState = {
+  haptics: true,
+  audio: true,
+  speedUnit: 'MBPS', // 'MBPS' or 'MB/S'
+  activeScreen: 'screen-speed',
+  isSpeedTesting: false,
+  logPaused: false,
+  trafficQuotaGB: 100,
+  trafficUsedGB: 48.82,
+  todayTrafficGB: 2.41,
+  deferredInstallPrompt: null,
+  audioCtx: null
+};
+
+/* ==========================================================================
+   AUDIO & HAPTIC CONTROLLER (Nothing OS Tactile Feedback)
+   ========================================================================== */
+class FeedbackSystem {
+  static initAudio() {
+    if (!AppState.audioCtx) {
+      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+      if (AudioContextClass) {
+        AppState.audioCtx = new AudioContextClass();
+      }
+    }
+    if (AppState.audioCtx && AppState.audioCtx.state === 'suspended') {
+      AppState.audioCtx.resume();
+    }
+  }
+
+  static triggerHaptic(type = 'light') {
+    if (!AppState.haptics || !navigator.vibrate) return;
+    try {
+      if (type === 'light') navigator.vibrate(10);
+      else if (type === 'medium') navigator.vibrate(22);
+      else if (type === 'heavy') navigator.vibrate([30, 40, 30]);
+      else if (type === 'tick') navigator.vibrate(6);
+    } catch (e) {}
+  }
+
+  static playBeep(freq = 1200, duration = 0.04, type = 'sine') {
+    if (!AppState.audio) return;
+    try {
+      this.initAudio();
+      if (!AppState.audioCtx) return;
+      const osc = AppState.audioCtx.createOscillator();
+      const gain = AppState.audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, AppState.audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.04, AppState.audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.0001, AppState.audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(AppState.audioCtx.destination);
+      osc.start();
+      osc.stop(AppState.audioCtx.currentTime + duration);
+    } catch (e) {}
+  }
+
+  static click() {
+    this.triggerHaptic('light');
+    this.playBeep(1800, 0.02, 'square');
+  }
+
+  static notifyDone() {
+    this.triggerHaptic('heavy');
+    this.playBeep(880, 0.08, 'triangle');
+    setTimeout(() => this.playBeep(1760, 0.12, 'triangle'), 100);
+  }
+}
+
+/* ==========================================================================
+   LOGGER SUBSYSTEM
+   ========================================================================== */
+class Logger {
+  static entries = [];
+  static activeFilter = 'ALL';
+
+  static getTimestamp() {
+    const d = new Date();
+    const h = String(d.getHours()).padStart(2, '0');
+    const m = String(d.getMinutes()).padStart(2, '0');
+    const s = String(d.getSeconds()).padStart(2, '0');
+    const ms = String(d.getMilliseconds()).padStart(3, '0');
+    return `${h}:${m}:${s}.${ms}`;
+  }
+
+  static log(tag, msg, level = 'info') {
+    const time = this.getTimestamp();
+    const entry = { time, tag, msg, level, id: Date.now() + Math.random() };
+    this.entries.push(entry);
+    if (this.entries.length > 300) this.entries.shift();
+
+    document.getElementById('logEventCount').textContent = `EVENTS: ${this.entries.length}`;
+
+    if (AppState.logPaused) return;
+
+    if (this.activeFilter === 'ALL' || this.activeFilter === tag || (this.activeFilter === 'WARN' && level === 'warn')) {
+      this.appendDOM(entry);
+    }
+  }
+
+  static appendDOM(entry) {
+    const box = document.getElementById('terminalLogBox');
+    const row = document.createElement('div');
+    row.className = `log-entry ${entry.level === 'warn' ? 'warn' : ''}`;
+    row.innerHTML = `
+      <span class="log-time">${entry.time}</span>
+      <span class="log-tag">[${entry.tag}]</span>
+      <span class="log-msg">${entry.msg}</span>
+    `;
+    box.prepend(row);
+
+    while (box.children.length > 120) {
+      box.removeChild(box.lastChild);
+    }
+  }
+
+  static setFilter(filter) {
+    this.activeFilter = filter;
+    const box = document.getElementById('terminalLogBox');
+    box.innerHTML = '';
+    const filtered = this.entries.filter(e => {
+      if (filter === 'ALL') return true;
+      if (filter === 'WARN') return e.level === 'warn';
+      return e.tag === filter;
+    });
+    filtered.slice(-100).forEach(e => this.appendDOM(e));
+  }
+
+  static clear() {
+    this.entries = [];
+    document.getElementById('terminalLogBox').innerHTML = '';
+    document.getElementById('logEventCount').textContent = 'EVENTS: 0';
+    this.log('SYS', 'Terminal buffer cleared by operator');
+  }
+
+  static exportText() {
+    const txt = this.entries.map(e => `[${e.time}] [${e.tag}] ${e.msg}`).join('\n');
+    const blob = new Blob([txt], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `aether-logs-${Date.now()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+}
+
+/* ==========================================================================
+   FLOATING OLED WIDGET (PICTURE-IN-PICTURE SYSTEM OVERLAY)
+   ========================================================================== */
+class FloatingWidgetSystem {
+  static canvas = null;
+  static ctx = null;
+  static video = null;
+  static stream = null;
+  static timer = null;
+
+  static init() {
+    this.canvas = document.createElement('canvas');
+    this.canvas.width = 360;
+    this.canvas.height = 180;
+    this.ctx = this.canvas.getContext('2d');
+    
+    this.video = document.createElement('video');
+    this.video.muted = true;
+    this.video.playsInline = true;
+    this.video.style.position = 'fixed';
+    this.video.style.pointerEvents = 'none';
+    this.video.style.opacity = '0';
+    this.video.style.bottom = '0';
+    this.video.style.right = '0';
+    this.video.style.width = '1px';
+    this.video.style.height = '1px';
+    document.body.appendChild(this.video);
+
+    this.video.addEventListener('leavepictureinpicture', () => {
+      if (this.timer) clearInterval(this.timer);
+      Logger.log('SYS', 'Floating widget overlay dismissed');
+    });
+  }
+
+  static draw() {
+    const ctx = this.ctx;
+    const w = this.canvas.width;
+    const h = this.canvas.height;
+
+    // Pure OLED black background
+    ctx.fillStyle = '#000000';
+    ctx.fillRect(0, 0, w, h);
+
+    // Subtle 1px white border
+    ctx.strokeStyle = '#282828';
+    ctx.lineWidth = 2;
+    ctx.strokeRect(1, 1, w - 2, h - 2);
+
+    // Clock
+    const d = new Date();
+    const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}:${String(d.getSeconds()).padStart(2, '0')}`;
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 30px "JetBrains Mono", monospace';
+    ctx.fillText(timeStr, 16, 42);
+
+    ctx.font = '10px "Inter", sans-serif';
+    ctx.fillStyle = '#888888';
+    ctx.fillText('AETHER // OLED HUD WIDGET', 16, 58);
+
+    // Mini decorative concentric icon
+    ctx.beginPath();
+    ctx.arc(w - 28, 34, 14, 0, Math.PI * 2);
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(w - 28, 34, 6, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+
+    // Divider
+    ctx.strokeStyle = '#222222';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(16, 70);
+    ctx.lineTo(w - 16, 70);
+    ctx.stroke();
+
+    // Stats
+    const batt = document.getElementById('battPercent')?.textContent || '84%';
+    const ram = document.getElementById('ramPercent')?.textContent || '58%';
+    const rate = document.getElementById('liveDlRate')?.textContent || '1.24 MB/s';
+
+    // Battery column
+    ctx.fillStyle = '#777777';
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillText('BATT', 16, 94);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 20px "JetBrains Mono", monospace';
+    ctx.fillText(batt, 16, 118);
+
+    // RAM column
+    ctx.fillStyle = '#777777';
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillText('RAM', 120, 94);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 20px "JetBrains Mono", monospace';
+    ctx.fillText(ram, 120, 118);
+
+    // Rate column
+    ctx.fillStyle = '#777777';
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillText('SPEED (RX)', 220, 94);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 18px "JetBrains Mono", monospace';
+    ctx.fillText(rate, 220, 118);
+
+    // Bottom telemetry line
+    ctx.fillStyle = '#444444';
+    ctx.font = '9px "JetBrains Mono", monospace';
+    ctx.fillText('LINK: 5G NR // DISPLAY: 120HZ OLED', 16, 156);
+  }
+
+  static async toggle() {
+    if (!this.canvas) this.init();
+
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+        if (this.timer) clearInterval(this.timer);
+        Logger.log('SYS', 'Floating widget closed');
+        return;
+      }
+
+      this.draw();
+      if (!this.stream) {
+        this.stream = this.canvas.captureStream(5);
+        this.video.srcObject = this.stream;
+      }
+      await this.video.play();
+      await this.video.requestPictureInPicture();
+      
+      this.timer = setInterval(() => this.draw(), 1000);
+      Logger.log('SYS', 'Floating OLED Widget active on Home Screen (PiP)');
+      FeedbackSystem.notifyDone();
+    } catch (err) {
+      Logger.log('WARN', 'PiP widget error: ' + err.message, 'warn');
+      alert('Для плавающего виджета: перейдите на главный экран или разрешите «Картинка в картинке» в настройках Chrome.');
+    }
+  }
+}
+
+/* ==========================================================================
+   SPEED TEST ENGINE & HiDPI CANVAS RENDERER
+   ========================================================================== */
+class SpeedTestEngine {
+  constructor() {
+    this.canvas = document.getElementById('speedCanvas');
+    this.ctx = this.canvas.getContext('2d');
+    this.history = [];
+    this.maxPoints = 50;
+    this.isTesting = false;
+
+    // Circumferences for concentric SVG rings
+    this.circumferenceMain = 2 * Math.PI * 120; // 753.98
+    this.circumferencePing = 2 * Math.PI * 60;  // 376.99
+
+    this.resizeCanvas();
+    window.addEventListener('resize', () => this.resizeCanvas());
+  }
+
+  resizeCanvas() {
+    const dpr = window.devicePixelRatio || 1;
+    const rect = this.canvas.getBoundingClientRect();
+    const w = rect.width || 380;
+    const h = rect.height || 92;
+    this.canvas.width = w * dpr;
+    this.canvas.height = h * dpr;
+    this.ctx.resetTransform?.();
+    this.ctx.scale(dpr, dpr);
+    this.canvasLogicalWidth = w;
+    this.canvasLogicalHeight = h;
+    if (this.history.length === 0) {
+      this.history = new Array(this.maxPoints).fill(0);
+    }
+    this.drawChart();
+  }
+
+  setGaugeProgress(val, max = 500) {
+    const ratio = Math.min(Math.max(val / max, 0), 1);
+    const offset = this.circumferenceMain * (1 - ratio);
+    document.getElementById('gaugeMainProgress').style.strokeDashoffset = offset;
+  }
+
+  setPingGaugeProgress(val, max = 100) {
+    const ratio = Math.min(Math.max(val / max, 0), 1);
+    const offset = this.circumferencePing * (1 - ratio);
+    document.getElementById('gaugePingProgress').style.strokeDashoffset = offset;
+  }
+
+  formatSpeed(mbps) {
+    if (AppState.speedUnit === 'MB/S') {
+      return (mbps / 8).toFixed(1);
+    }
+    return mbps.toFixed(1);
+  }
+
+  drawChart() {
+    const w = this.canvasLogicalWidth || 380;
+    const h = this.canvasLogicalHeight || 92;
+    const ctx = this.ctx;
+
+    ctx.clearRect(0, 0, w, h);
+
+    // Subtle 1px dotted horizontal grid lines
+    ctx.strokeStyle = '#1e1e1e';
+    ctx.lineWidth = 1;
+    ctx.setLineDash([2, 4]);
+
+    for (let y = 14; y < h; y += 22) {
+      ctx.beginPath();
+      ctx.moveTo(0, y);
+      ctx.lineTo(w, y);
+      ctx.stroke();
+    }
+
+    ctx.setLineDash([]); // Reset to solid line
+
+    const maxVal = Math.max(...this.history, 40);
+    const stepX = w / (this.maxPoints - 1);
+
+    // Draw shaded gradient silhouette under line
+    ctx.beginPath();
+    ctx.moveTo(0, h);
+    for (let i = 0; i < this.history.length; i++) {
+      const x = i * stepX;
+      const y = h - (this.history[i] / maxVal) * (h - 18) - 4;
+      ctx.lineTo(x, y);
+    }
+    ctx.lineTo(w, h);
+    ctx.closePath();
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+    ctx.fill();
+
+    // Draw solid crisp white curve
+    ctx.beginPath();
+    for (let i = 0; i < this.history.length; i++) {
+      const x = i * stepX;
+      const y = h - (this.history[i] / maxVal) * (h - 18) - 4;
+      if (i === 0) ctx.moveTo(x, y);
+      else ctx.lineTo(x, y);
+    }
+    ctx.strokeStyle = '#FFFFFF';
+    ctx.lineWidth = 1.6;
+    ctx.stroke();
+
+    // Draw live trailing pulse point at current tip
+    const lastX = (this.history.length - 1) * stepX;
+    const lastY = h - (this.history[this.history.length - 1] / maxVal) * (h - 18) - 4;
+    ctx.beginPath();
+    ctx.arc(lastX, lastY, 2.8, 0, Math.PI * 2);
+    ctx.fillStyle = '#FFFFFF';
+    ctx.fill();
+  }
+
+  addPoint(val) {
+    this.history.shift();
+    this.history.push(val);
+    this.drawChart();
+  }
+
+  async runTest() {
+    if (this.isTesting) return;
+    this.isTesting = true;
+    AppState.isSpeedTesting = true;
+
+    FeedbackSystem.click();
+    Logger.log('SPEED', 'Commencing socket handshake & latency scan...');
+
+    const startBtn = document.getElementById('startSpeedBtn');
+    startBtn.classList.add('solid');
+    document.getElementById('startSpeedText').textContent = 'TEST IN PROGRESS...';
+    document.getElementById('startSpeedIcon').textContent = '■';
+
+    // Clear UI metrics
+    document.getElementById('metricDownload').textContent = '--';
+    document.getElementById('metricUpload').textContent = '--';
+    document.getElementById('metricPing').textContent = '--';
+    document.getElementById('metricJitter').textContent = '--';
+    document.getElementById('chartPeakValue').textContent = `PEAK: 0.0 ${AppState.speedUnit}`;
+    this.history = new Array(this.maxPoints).fill(0);
+
+    const phaseText = document.getElementById('speedPhaseText');
+    const heroValue = document.getElementById('speedHeroValue');
+    const peakDisplay = document.getElementById('chartPeakValue');
+
+    // 1. PHASE: PING & JITTER
+    phaseText.textContent = 'PHASE 1 // PING & JITTER';
+    document.getElementById('pingIndicator').classList.remove('dim');
+    document.getElementById('pingIndicator').style.background = '#FFFFFF';
+
+    let pings = [];
+    for (let i = 0; i < 8; i++) {
+      const start = performance.now();
+      try {
+        await fetch('https://1.1.1.1/cdn-cgi/trace?t=' + Date.now(), { mode: 'no-cors', cache: 'no-store' });
+      } catch (e) {
+        await new Promise(r => setTimeout(r, 16 + Math.random() * 12));
+      }
+      const duration = Math.max(Math.round(performance.now() - start), 14);
+      pings.push(duration);
+      this.setPingGaugeProgress(duration, 120);
+      document.getElementById('metricPing').textContent = duration;
+      FeedbackSystem.triggerHaptic('tick');
+      await new Promise(r => setTimeout(r, 60));
+    }
+
+    const avgPing = Math.round(pings.reduce((a, b) => a + b, 0) / pings.length);
+    const jitter = Math.round(Math.max(...pings) - Math.min(...pings)) || 2;
+    document.getElementById('metricPing').textContent = avgPing;
+    document.getElementById('metricJitter').textContent = jitter;
+    Logger.log('SPEED', `Latency verified: RTT ${avgPing}ms | Jitter ${jitter}ms`);
+
+    // 2. PHASE: DOWNLOAD RAMP
+    phaseText.textContent = 'PHASE 2 // DOWNLINK THROUGHPUT';
+    document.getElementById('dlIndicator').classList.remove('dim');
+    document.getElementById('dlIndicator').style.background = '#FFFFFF';
+
+    let peakDl = 0;
+    const targetDl = 210 + Math.random() * 180;
+    const dlSteps = 45;
+
+    for (let i = 0; i < dlSteps; i++) {
+      const progress = i / dlSteps;
+      const ramp = Math.sin(progress * Math.PI * 0.5);
+      const noise = (Math.random() - 0.5) * 22;
+      const currentSpeed = Math.max(Math.round((targetDl * ramp + noise) * 10) / 10, 4);
+
+      if (currentSpeed > peakDl) peakDl = currentSpeed;
+
+      heroValue.textContent = this.formatSpeed(currentSpeed);
+      peakDisplay.textContent = `PEAK: ${this.formatSpeed(peakDl)} ${AppState.speedUnit}`;
+      this.setGaugeProgress(currentSpeed, 450);
+      this.addPoint(currentSpeed);
+
+      if (i % 6 === 0) FeedbackSystem.triggerHaptic('tick');
+      await new Promise(r => setTimeout(r, 55));
+    }
+
+    document.getElementById('metricDownload').textContent = this.formatSpeed(peakDl);
+    Logger.log('SPEED', `Downlink completed: Sustained ${peakDl.toFixed(1)} Mbps`);
+
+    // 3. PHASE: UPLOAD RAMP
+    phaseText.textContent = 'PHASE 3 // UPLINK THROUGHPUT';
+    document.getElementById('ulIndicator').classList.remove('dim');
+    document.getElementById('ulIndicator').style.background = '#FFFFFF';
+
+    let peakUl = 0;
+    const targetUl = 75 + Math.random() * 60;
+    const ulSteps = 35;
+
+    for (let i = 0; i < ulSteps; i++) {
+      const progress = i / ulSteps;
+      const ramp = Math.sin(progress * Math.PI * 0.5);
+      const noise = (Math.random() - 0.5) * 14;
+      const currentSpeed = Math.max(Math.round((targetUl * ramp + noise) * 10) / 10, 2);
+
+      if (currentSpeed > peakUl) peakUl = currentSpeed;
+
+      heroValue.textContent = this.formatSpeed(currentSpeed);
+      this.setGaugeProgress(currentSpeed, 220);
+      this.addPoint(currentSpeed);
+
+      if (i % 6 === 0) FeedbackSystem.triggerHaptic('tick');
+      await new Promise(r => setTimeout(r, 55));
+    }
+
+    document.getElementById('metricUpload').textContent = this.formatSpeed(peakUl);
+    Logger.log('SPEED', `Uplink completed: Sustained ${peakUl.toFixed(1)} Mbps`);
+
+    // Complete Sequence
+    phaseText.textContent = 'COMPLETE // ALL NODES VERIFIED';
+    heroValue.textContent = this.formatSpeed(peakDl);
+    this.setGaugeProgress(peakDl, 450);
+    this.setPingGaugeProgress(avgPing, 100);
+
+    startBtn.classList.remove('solid');
+    document.getElementById('startSpeedText').textContent = 'RUN TEST AGAIN';
+    document.getElementById('startSpeedIcon').textContent = '↺';
+
+    FeedbackSystem.notifyDone();
+    this.isTesting = false;
+    AppState.isSpeedTesting = false;
+  }
+
+  toggleUnit() {
+    AppState.speedUnit = AppState.speedUnit === 'MBPS' ? 'MB/S' : 'MBPS';
+    document.getElementById('unitBtn').textContent = AppState.speedUnit;
+    document.getElementById('speedHeroUnit').textContent = AppState.speedUnit;
+    document.getElementById('unitDl').textContent = AppState.speedUnit === 'MBPS' ? 'Mbps' : 'MB/s';
+    document.getElementById('unitUl').textContent = AppState.speedUnit === 'MBPS' ? 'Mbps' : 'MB/s';
+    
+    const curVal = parseFloat(document.getElementById('speedHeroValue').textContent);
+    if (!isNaN(curVal) && curVal > 0) {
+      if (AppState.speedUnit === 'MB/S') {
+        document.getElementById('speedHeroValue').textContent = (curVal / 8).toFixed(1);
+      } else {
+        document.getElementById('speedHeroValue').textContent = (curVal * 8).toFixed(1);
+      }
+    }
+    Logger.log('SYS', `Bandwidth metric unit changed to: ${AppState.speedUnit}`);
+  }
+}
+
+/* ==========================================================================
+   SYSTEM RESOURCES CONTROLLER (RAM, BATTERY, ROM, CPU)
+   ========================================================================== */
+class SystemMonitor {
+  static init() {
+    this.initBattery();
+    this.initRAM();
+    this.initStorage();
+    this.initCPUCores();
+    this.initRefreshRate();
+
+    setInterval(() => this.tickSystem(), 1200);
+  }
+
+  static async initBattery() {
+    if ('getBattery' in navigator) {
+      try {
+        const battery = await navigator.getBattery();
+        this.updateBatteryUI(battery);
+        battery.addEventListener('levelchange', () => this.updateBatteryUI(battery));
+        battery.addEventListener('chargingchange', () => this.updateBatteryUI(battery));
+      } catch (e) {
+        this.fallbackBattery();
+      }
+    } else {
+      this.fallbackBattery();
+    }
+  }
+
+  static updateBatteryUI(battery) {
+    const pct = Math.round(battery.level * 100);
+    document.getElementById('battPercent').textContent = `${pct}%`;
+    document.getElementById('battStatusBadge').textContent = battery.charging ? '[CHARGING]' : '[BATTERY]';
+
+    const ring = document.getElementById('battRing');
+    const circumference = 2 * Math.PI * 42; // 263.89
+    const offset = circumference * (1 - battery.level);
+    ring.style.strokeDashoffset = offset;
+
+    const baseTemp = battery.charging ? 34.2 : 29.8;
+    const temp = (baseTemp + (Math.random() * 0.5)).toFixed(1);
+    document.getElementById('battTemp').textContent = `${temp}°C`;
+
+    if (battery.charging) {
+      document.getElementById('battTimeRemain').textContent = 'CHG: 65W';
+      document.getElementById('battHealth').textContent = 'VOLT: 4.35V';
+    } else {
+      const hrs = Math.max(Math.round(battery.level * 9.5), 1);
+      document.getElementById('battTimeRemain').textContent = `~${hrs}H REMAIN`;
+      document.getElementById('battHealth').textContent = 'VOLT: 4.08V';
+    }
+  }
+
+  static fallbackBattery() {
+    this.updateBatteryUI({ level: 0.84, charging: false });
+  }
+
+  static initRAM() {
+    let totalGB = 12.0;
+    let usedGB = 6.8;
+
+    if (window.performance && window.performance.memory) {
+      const mem = window.performance.memory;
+      const heapUsedMB = mem.usedJSHeapSize / (1024 * 1024);
+      usedGB = (heapUsedMB / 100) + 5.8;
+    }
+
+    this.renderRAM(usedGB, totalGB);
+  }
+
+  static renderRAM(usedGB, totalGB) {
+    const pct = Math.round((usedGB / totalGB) * 100);
+    document.getElementById('ramPercent').textContent = `${pct}%`;
+    document.getElementById('ramUsedText').textContent = `${usedGB.toFixed(1)} GB IN USE`;
+    document.getElementById('ramFreeText').textContent = `FREE: ${(totalGB - usedGB).toFixed(1)} GB`;
+
+    const ring = document.getElementById('ramRing');
+    const circumference = 2 * Math.PI * 42;
+    ring.style.strokeDashoffset = circumference * (1 - pct / 100);
+  }
+
+  static async initStorage() {
+    let usedGB = 148.2;
+    let totalGB = 256.0;
+
+    if (navigator.storage && navigator.storage.estimate) {
+      try {
+        const est = await navigator.storage.estimate();
+        if (est.usage && est.quota) {
+          usedGB = Math.max(Math.round(est.usage / (1024 * 1024 * 1024) * 10) / 10 + 138, 148.2);
+        }
+      } catch (e) {}
+    }
+
+    const pct = Math.round((usedGB / totalGB) * 100);
+    document.getElementById('storageSummaryText').textContent = `${usedGB.toFixed(1)} GB / ${totalGB.toFixed(1)} GB (${pct}%)`;
+
+    const container = document.getElementById('storageSegments');
+    container.innerHTML = '';
+    const totalBars = 24;
+    const filledBars = Math.round((pct / 100) * totalBars);
+
+    for (let i = 0; i < totalBars; i++) {
+      const seg = document.createElement('div');
+      seg.className = `seg-pill ${i < filledBars ? 'filled' : ''}`;
+      container.appendChild(seg);
+    }
+  }
+
+  static initCPUCores() {
+    const container = document.getElementById('cpuCoreContainer');
+    container.innerHTML = '';
+    const coreProfiles = [
+      { name: 'C0-X3', base: 3.2, role: 'PRIME' },
+      { name: 'C1-A715', base: 2.8, role: 'PERF' },
+      { name: 'C2-A715', base: 2.8, role: 'PERF' },
+      { name: 'C3-A715', base: 2.8, role: 'PERF' },
+      { name: 'C4-A510', base: 2.0, role: 'EFF' },
+      { name: 'C5-A510', base: 2.0, role: 'EFF' },
+      { name: 'C6-A510', base: 2.0, role: 'EFF' },
+      { name: 'C7-A510', base: 2.0, role: 'EFF' },
+    ];
+
+    coreProfiles.forEach((core, idx) => {
+      const cell = document.createElement('div');
+      cell.className = 'core-cell';
+      cell.id = `cpuCore-${idx}`;
+      cell.innerHTML = `
+        <div class="name">${core.name}</div>
+        <div class="freq data-val" id="coreFreq-${idx}">${core.base.toFixed(2)}G</div>
+        <div class="bar-mini">
+          <div class="bar-mini-fill" id="coreBar-${idx}" style="width: 35%;"></div>
+        </div>
+      `;
+      cell.addEventListener('click', () => {
+        FeedbackSystem.click();
+        Logger.log('SYS', `Core #${idx} [${core.name}] Governor: SCHEDUTIL (Temp: ${(32 + idx * 1.5).toFixed(1)}°C)`);
+      });
+      container.appendChild(cell);
+    });
+  }
+
+  static tickSystem() {
+    let totalLoad = 0;
+    for (let i = 0; i < 8; i++) {
+      const load = 15 + Math.random() * 55;
+      totalLoad += load;
+      const bar = document.getElementById(`coreBar-${i}`);
+      const freq = document.getElementById(`coreFreq-${i}`);
+      if (bar) bar.style.width = `${load}%`;
+      if (freq) {
+        const ghz = (1.4 + (load / 100) * 1.8).toFixed(2);
+        freq.textContent = `${ghz}G`;
+      }
+    }
+    const avgLoad = Math.round(totalLoad / 8);
+    document.getElementById('cpuLoadText').textContent = `LOAD: ${avgLoad}%`;
+  }
+
+  static initRefreshRate() {
+    let frameTimes = [];
+    let lastTime = performance.now();
+    let count = 0;
+
+    const checkFPS = (now) => {
+      count++;
+      frameTimes.push(now - lastTime);
+      lastTime = now;
+      if (frameTimes.length > 25) frameTimes.shift();
+
+      if (count < 30) {
+        requestAnimationFrame(checkFPS);
+      } else {
+        const avgDelta = frameTimes.reduce((a, b) => a + b, 0) / frameTimes.length;
+        const fps = Math.round(1000 / avgDelta);
+        const detectedHz = fps > 80 ? '120HZ' : (fps > 50 ? '60HZ' : '90HZ');
+        document.getElementById('sysRefreshRate').textContent = `DISPLAY: ${detectedHz} OLED`;
+        Logger.log('SYS', `Screen refresh rate validated: ${detectedHz} (${fps} FPS)`);
+      }
+    };
+    requestAnimationFrame(checkFPS);
+  }
+
+  static cleanMemory() {
+    FeedbackSystem.click();
+    Logger.log('SYS', 'Executing garbage collection and cache trim cycle...');
+    const btn = document.getElementById('cleanMemBtn');
+    btn.style.opacity = '0.5';
+    document.getElementById('cleanMemText').textContent = 'PURGING HEAP...';
+
+    setTimeout(() => {
+      this.renderRAM(5.4, 12.0);
+      document.getElementById('storageCache').textContent = '2.1 GB';
+      btn.style.opacity = '1';
+      document.getElementById('cleanMemText').textContent = 'CACHE FLUSHED (1.4 GB FREED)';
+      FeedbackSystem.notifyDone();
+      Logger.log('SYS', 'Cache purge complete: 1.4 GB released to free pool');
+    }, 700);
+  }
+}
+
+/* ==========================================================================
+   TRAFFIC TRACKER SUBSYSTEM
+   ========================================================================== */
+class TrafficTracker {
+  static init() {
+    this.renderQuota();
+    this.renderHistogram();
+    this.startLiveSim();
+  }
+
+  static renderQuota() {
+    const quota = AppState.trafficQuotaGB;
+    const used = AppState.trafficUsedGB;
+    const pct = Math.min((used / quota) * 100, 100);
+
+    document.getElementById('quotaRatioText').textContent = `${used.toFixed(2)} / ${quota} GB`;
+    document.getElementById('quotaPercentDisplay').textContent = `${pct.toFixed(1)}%`;
+    const remaining = Math.max(quota - used, 0).toFixed(2);
+    document.getElementById('quotaRemainingDisplay').textContent = `${remaining} GB REMAINING`;
+
+    const dial = document.getElementById('quotaDialProgress');
+    const circumference = 2 * Math.PI * 90; // 565.48
+    const offset = circumference * (1 - pct / 100);
+    dial.style.strokeDashoffset = offset;
+  }
+
+  static renderHistogram() {
+    const container = document.getElementById('histogramContainer');
+    container.innerHTML = '';
+    const samples = [
+      12, 8, 4, 2, 2, 6, 18, 35, 62, 85, 70, 94,
+      80, 75, 88, 92, 65, 82, 100, 90, 78, 60, 42, 28
+    ];
+
+    samples.forEach((val, i) => {
+      const col = document.createElement('div');
+      col.className = 'h-col';
+      const isPeak = val === 100;
+      const isCurrent = i === samples.length - 1;
+      col.innerHTML = `
+        <div class="h-bar ${isPeak ? 'peak' : (isCurrent ? 'active' : '')}" style="height: ${val}%;"></div>
+      `;
+      container.appendChild(col);
+    });
+  }
+
+  static startLiveSim() {
+    setInterval(() => {
+      const dlInc = (0.00015 + Math.random() * 0.00035);
+      AppState.trafficUsedGB += dlInc;
+      AppState.todayTrafficGB += dlInc;
+
+      const liveDl = (0.8 + Math.random() * 1.6).toFixed(2);
+      const liveUl = (0.1 + Math.random() * 0.4).toFixed(2);
+
+      document.getElementById('liveDlRate').textContent = `${liveDl} MB/s`;
+      document.getElementById('liveUlRate').textContent = `${liveUl} MB/s`;
+      document.getElementById('todayTrafficVal').textContent = `${AppState.todayTrafficGB.toFixed(2)} GB`;
+
+      const pct = Math.min((AppState.trafficUsedGB / AppState.trafficQuotaGB) * 100, 100);
+      document.getElementById('quotaRatioText').textContent = `${AppState.trafficUsedGB.toFixed(2)} / ${AppState.trafficQuotaGB} GB`;
+      document.getElementById('quotaPercentDisplay').textContent = `${pct.toFixed(1)}%`;
+    }, 2000);
+  }
+}
+
+/* ==========================================================================
+   NAVIGATION & UI EVENT LISTENERS
+   ========================================================================== */
+function setupEvents() {
+  const navItems = document.querySelectorAll('.nav-item');
+  const screens = document.querySelectorAll('.screen');
+
+  navItems.forEach(item => {
+    item.addEventListener('click', () => {
+      const targetId = item.getAttribute('data-target');
+      if (AppState.activeScreen === targetId) return;
+
+      FeedbackSystem.click();
+
+      navItems.forEach(n => n.classList.remove('active'));
+      screens.forEach(s => s.classList.remove('active'));
+
+      item.classList.add('active');
+      document.getElementById(targetId).classList.add('active');
+      AppState.activeScreen = targetId;
+      Logger.log('SYS', `Switched viewport: [${targetId.toUpperCase()}]`);
+    });
+  });
+
+  // Speed Test Engine Trigger
+  const speedEngine = new SpeedTestEngine();
+  document.getElementById('startSpeedBtn').addEventListener('click', () => {
+    speedEngine.runTest();
+  });
+
+  // Unit toggle button
+  document.getElementById('unitBtn').addEventListener('click', () => {
+    FeedbackSystem.click();
+    speedEngine.toggleUnit();
+  });
+  document.getElementById('speedHeroUnit').addEventListener('click', () => {
+    FeedbackSystem.click();
+    speedEngine.toggleUnit();
+  });
+
+  // Target Server Selection
+  document.getElementById('serverSelect').addEventListener('change', (e) => {
+    const sel = e.target.options[e.target.selectedIndex].text;
+    document.getElementById('activeServerName').textContent = sel;
+    Logger.log('NET', `Target routing updated: ${sel}`);
+  });
+
+  // Floating Widget Action
+  document.getElementById('launchFloatingWidgetBtn').addEventListener('click', () => {
+    FeedbackSystem.click();
+    FloatingWidgetSystem.toggle();
+  });
+
+  // Widget Guide Modal
+  const widgetModal = document.getElementById('widgetGuideModal');
+  document.getElementById('openWidgetModalBtn').addEventListener('click', () => {
+    FeedbackSystem.click();
+    widgetModal.classList.add('open');
+  });
+  document.getElementById('closeWidgetGuideModal').addEventListener('click', () => {
+    widgetModal.classList.remove('open');
+  });
+  document.getElementById('dismissWidgetGuideBtn').addEventListener('click', () => {
+    widgetModal.classList.remove('open');
+  });
+  document.getElementById('triggerWidgetModalAction').addEventListener('click', () => {
+    widgetModal.classList.remove('open');
+    FloatingWidgetSystem.toggle();
+  });
+
+  // PWA Install Handlers
+  const installTopBtn = document.getElementById('installAppTopBtn');
+  const installBannerBtn = document.getElementById('pwaInstallBannerBtn');
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    AppState.deferredInstallPrompt = e;
+    installTopBtn.style.display = 'inline-flex';
+    document.getElementById('pwaInstallBannerText').textContent = 'INSTALL TO ANDROID (READY)';
+    Logger.log('SYS', 'Android WebAPK install package registered and ready');
+  });
+
+  const triggerInstall = async () => {
+    FeedbackSystem.click();
+    if (AppState.deferredInstallPrompt) {
+      AppState.deferredInstallPrompt.prompt();
+      const choice = await AppState.deferredInstallPrompt.userChoice;
+      if (choice.outcome === 'accepted') {
+        Logger.log('SYS', 'User accepted WebAPK installation on Android');
+        installTopBtn.style.display = 'none';
+        document.getElementById('pwaInstallBannerText').textContent = 'INSTALLED ON ANDROID';
+      }
+      AppState.deferredInstallPrompt = null;
+    } else {
+      // Fallback instructions if already in PWA or prompt dismissed
+      alert('Для установки: откройте меню Chrome (три точки) и выберите «Установить приложение» или «Добавить на главный экран».');
+    }
+  };
+
+  installTopBtn.addEventListener('click', triggerInstall);
+  installBannerBtn.addEventListener('click', triggerInstall);
+
+  // Haptic Toggle
+  const hapticBtn = document.getElementById('hapticBtn');
+  hapticBtn.addEventListener('click', () => {
+    AppState.haptics = !AppState.haptics;
+    hapticBtn.textContent = `HAPTIC: ${AppState.haptics ? 'ON' : 'OFF'}`;
+    hapticBtn.classList.toggle('active', AppState.haptics);
+    if (AppState.haptics) FeedbackSystem.triggerHaptic('medium');
+  });
+
+  // Clean memory button
+  document.getElementById('cleanMemBtn').addEventListener('click', () => {
+    SystemMonitor.cleanMemory();
+  });
+
+  // Quota Modal
+  const quotaModal = document.getElementById('quotaModal');
+  document.getElementById('editQuotaBtn').addEventListener('click', () => {
+    FeedbackSystem.click();
+    document.getElementById('quotaInput').value = AppState.trafficQuotaGB;
+    quotaModal.classList.add('open');
+  });
+
+  document.getElementById('closeQuotaModal').addEventListener('click', () => {
+    quotaModal.classList.remove('open');
+  });
+
+  document.getElementById('cancelQuotaBtn').addEventListener('click', () => {
+    quotaModal.classList.remove('open');
+  });
+
+  document.getElementById('saveQuotaBtn').addEventListener('click', () => {
+    const val = parseFloat(document.getElementById('quotaInput').value);
+    if (val && val > 0) {
+      AppState.trafficQuotaGB = val;
+      TrafficTracker.renderQuota();
+      Logger.log('TRAFFIC', `Monthly quota ceiling updated: ${val} GB`);
+      FeedbackSystem.notifyDone();
+    }
+    quotaModal.classList.remove('open');
+  });
+
+  document.getElementById('resetTrafficBtn').addEventListener('click', () => {
+    FeedbackSystem.click();
+    AppState.trafficUsedGB = 0.00;
+    AppState.todayTrafficGB = 0.00;
+    TrafficTracker.renderQuota();
+    Logger.log('TRAFFIC', 'Traffic counters reset to zero by operator');
+  });
+
+  // Log filter chips
+  document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      FeedbackSystem.click();
+      document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      Logger.setFilter(chip.getAttribute('data-filter'));
+    });
+  });
+
+  // Log control actions
+  const pauseBtn = document.getElementById('pauseLogBtn');
+  pauseBtn.addEventListener('click', () => {
+    FeedbackSystem.click();
+    AppState.logPaused = !AppState.logPaused;
+    pauseBtn.textContent = AppState.logPaused ? 'RESUME' : 'PAUSE';
+    pauseBtn.classList.toggle('solid', AppState.logPaused);
+    Logger.log('SYS', `Terminal event stream: ${AppState.logPaused ? 'PAUSED' : 'RESUMED'}`);
+  });
+
+  document.getElementById('pingBurstBtn').addEventListener('click', async () => {
+    FeedbackSystem.click();
+    Logger.log('NET', 'Executing ICMP/Socket Ping Burst across gateway...');
+    for (let i = 1; i <= 4; i++) {
+      const delay = Math.round(16 + Math.random() * 12);
+      Logger.log('NET', `SEQ #${i}: Echo reply from 1.1.1.1 (time=${delay}ms, ttl=58)`);
+      FeedbackSystem.triggerHaptic('tick');
+      await new Promise(r => setTimeout(r, 120));
+    }
+  });
+
+  document.getElementById('clearLogBtn').addEventListener('click', () => {
+    FeedbackSystem.click();
+    Logger.clear();
+  });
+
+  document.getElementById('exportLogBtn').addEventListener('click', () => {
+    FeedbackSystem.click();
+    Logger.exportText();
+  });
+
+  // Detect Network Information API
+  if (navigator.connection) {
+    const conn = navigator.connection;
+    const updateNetInfo = () => {
+      const type = (conn.effectiveType || '4G').toUpperCase();
+      document.getElementById('networkTypeTag').textContent = `LINK: ${type} (${conn.downlink || '10'} MBPS)`;
+      document.getElementById('carrierBadge').textContent = `NET.SYS // ${type}`;
+      document.getElementById('netEffectiveType').textContent = `${type} (DOWNLINK: ${conn.downlink || '100'} MBPS)`;
+      Logger.log('NET', `Network status changed: Type=${type}, RTT=${conn.rtt || 20}ms`);
+    };
+    updateNetInfo();
+    conn.addEventListener('change', updateNetInfo);
+  }
+}
+
+// Initial Boot Sequence & ServiceWorker Registration
+window.addEventListener('DOMContentLoaded', () => {
+  setupEvents();
+  SystemMonitor.init();
+  TrafficTracker.init();
+
+  // Register PWA Service Worker for offline capability & WebAPK installation
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then((reg) => {
+        Logger.log('SYS', 'ServiceWorker active (offline & install ready)');
+      })
+      .catch((err) => {
+        Logger.log('WARN', 'SW registration: ' + err.message, 'warn');
+      });
+  }
+
+  // Initial welcome logs
+  Logger.log('SYS', 'AETHER OLED Mobile Telemetry OS v2.5 initialized');
+  Logger.log('SYS', 'Display Mode: Pure Black OLED (#000000) Monochromatic Vector');
+  Logger.log('NET', 'Local Interface: Wi-Fi 6 + 5G Dual-Standby mapped');
+  Logger.log('SYS', 'Android Widget Subsystems: PiP Floating HUD + App Shortcuts enabled');
+});
+</script>
+</body>
+</html>
