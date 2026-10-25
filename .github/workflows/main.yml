@@ -21,6 +21,10 @@ jobs:
 
     - name: Assemble Android Project Structure
       run: |
+        # 1. Очистка дубликатов файлов
+        rm -f "build.gradle (1).kts" "index (2).html" "build-apk.yml"
+
+        # 2. Создание правильной файловой структуры Android
         mkdir -p app/src/main/java/com/aether/monitor/widget
         mkdir -p app/src/main/res/layout
         mkdir -p app/src/main/res/xml
@@ -28,17 +32,17 @@ jobs:
         mkdir -p app/src/main/res/values
         mkdir -p app/src/main/assets/www
 
-        # Раскладка файлов в нативную структуру Android
-        cp MainActivity.kt app/src/main/java/com/aether/monitor/ || true
-        cp AetherWidgetProvider.kt app/src/main/java/com/aether/monitor/widget/ || true
-        cp AndroidManifest.xml app/src/main/ || true
-        cp widget_telemetry.xml app/src/main/res/layout/ || true
-        cp widget_telemetry_info.xml app/src/main/res/xml/ || true
-        cp bg_widget_oled.xml ic_concentric_logo.xml icon-192.png app/src/main/res/drawable/ || true
-        cp colors.xml strings.xml themes.xml app/src/main/res/values/ || true
-        cp index.html app/src/main/assets/www/ || true
+        # 3. Раскладка файлов (без файлов с дефисами в названии)
+        cp MainActivity.kt app/src/main/java/com/aether/monitor/
+        cp AetherWidgetProvider.kt app/src/main/java/com/aether/monitor/widget/
+        cp AndroidManifest.xml app/src/main/
+        cp widget_telemetry.xml app/src/main/res/layout/
+        cp widget_telemetry_info.xml app/src/main/res/xml/
+        cp bg_widget_oled.xml ic_concentric_logo.xml app/src/main/res/drawable/
+        cp colors.xml strings.xml themes.xml app/src/main/res/values/
+        cp index.html app/src/main/assets/www/
 
-        # Создание файла settings.gradle.kts
+        # 4. Конфигурация settings.gradle.kts
         cat << 'EOF' > settings.gradle.kts
         pluginManagement {
             repositories {
@@ -58,7 +62,7 @@ jobs:
         include(":app")
         EOF
 
-        # Создание файла build.gradle.kts
+        # 5. Конфигурация build.gradle.kts
         cat << 'EOF' > build.gradle.kts
         plugins {
             id("com.android.application") version "8.3.2" apply false
@@ -66,7 +70,7 @@ jobs:
         }
         EOF
 
-        # Создание gradle.properties
+        # 6. Конфигурация gradle.properties
         cat << 'EOF' > gradle.properties
         org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
         android.useAndroidX=true
@@ -74,7 +78,7 @@ jobs:
         kotlin.code.style=official
         EOF
 
-        # Конфигурация модуля app
+        # 7. Конфигурация app/build.gradle.kts
         cat << 'EOF' > app/build.gradle.kts
         plugins {
             id("com.android.application")
@@ -115,9 +119,16 @@ jobs:
         }
         EOF
 
+        # 8. Автоматическое принятие лицензий Android SDK
+        yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+    - name: Setup Gradle 8.5
+      run: |
+        gradle wrapper --gradle-version 8.5 --distribution-type bin
+        chmod +x gradlew
+
     - name: Build Android APK
       run: |
-        gradle wrapper
         ./gradlew assembleDebug --stacktrace
 
     - name: Upload APK to Artifacts
