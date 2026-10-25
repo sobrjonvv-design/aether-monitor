@@ -276,55 +276,25 @@
     }
 
     /* ==========================================================================
-       SCREEN 5: ZEN SENSORY ANTI-STRESS LAB (12 MODULES)
+       SCREEN 5: ZEN SENSORY ANTI-STRESS LAB (FULLSCREEN + SUBTLE ARROW + WIDGET)
        ========================================================================== */
-    .zen-num-grid {
-      display: grid;
-      grid-template-columns: repeat(6, 1fr);
-      gap: 4px;
-      margin-bottom: 10px;
+    #screen-zen {
+      padding: 0 !important;
+      overflow: hidden !important;
+      background: #000000;
     }
 
-    .zen-num-btn {
-      background: var(--surface-1);
-      border: 1px solid var(--border-line);
-      color: var(--fg-secondary);
-      font-family: var(--font-mono);
-      font-size: 10px;
-      padding: 6px 0;
-      border-radius: 2px;
-      cursor: pointer;
-      transition: all 0.12s;
+    #app.zen-immersive .top-telemetry,
+    #app.zen-immersive .bottom-nav {
+      display: none !important;
     }
 
-    .zen-num-btn.active {
-      background: var(--fg-primary);
-      color: var(--bg);
-      border-color: var(--fg-primary);
-      font-weight: 700;
-    }
-
-    .zen-header-bar {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-      background: var(--surface-1);
-      border: 1px solid var(--border-line);
-      padding: 8px 10px;
-      border-radius: 3px;
-      margin-bottom: 10px;
-    }
-
-    .zen-arena-wrap {
+    .zen-fullscreen-stage {
       position: relative;
       width: 100%;
-      height: 245px;
+      height: 100%;
       background: #000000;
-      border: 1px solid var(--fg-primary);
-      border-radius: 4px;
       overflow: hidden;
-      margin-bottom: 12px;
     }
 
     #zenCanvas {
@@ -334,52 +304,165 @@
       touch-action: none;
     }
 
-    .zen-hud-label {
+    .zen-subtle-ctrl {
+      opacity: 0.26;
+      transition: opacity 0.2s ease, transform 0.15s ease;
+    }
+
+    .zen-subtle-ctrl:active,
+    .zen-subtle-ctrl:hover {
+      opacity: 0.95;
+    }
+
+    .zen-top-hud {
       position: absolute;
-      top: 8px;
-      left: 10px;
+      top: 12px;
+      left: 14px;
+      right: 150px;
+      pointer-events: none;
+      opacity: 0.42;
+      font-family: var(--font-mono);
+      z-index: 10;
+    }
+
+    .zen-top-actions {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 20;
+    }
+
+    .zen-pill-btn {
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      color: #FFFFFF;
       font-family: var(--font-mono);
       font-size: 9px;
-      color: rgba(255, 255, 255, 0.65);
-      letter-spacing: 0.08em;
-      pointer-events: none;
+      padding: 4px 8px;
+      border-radius: 3px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
     }
 
-    .zen-action-overlay {
+    .zen-arrow-next {
       position: absolute;
-      bottom: 8px;
-      right: 8px;
-      background: #FFFFFF;
-      color: #000000;
-      border: none;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 64px;
+      border-radius: 99px;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    .zen-arrow-prev {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 24px;
+      height: 46px;
+      border-radius: 99px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      color: rgba(255, 255, 255, 0.7);
+      font-family: var(--font-mono);
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      z-index: 20;
+      opacity: 0.15;
+    }
+
+    .zen-bottom-action {
+      position: absolute;
+      bottom: 14px;
+      right: 14px;
+      background: rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      color: #FFFFFF;
       font-family: var(--font-mono);
       font-size: 9.5px;
-      font-weight: 700;
-      letter-spacing: 0.08em;
-      padding: 5px 10px;
-      border-radius: 2px;
-      cursor: pointer;
-    }
-
-    .zen-catalog-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 6px;
-    }
-
-    .zen-catalog-card {
-      background: var(--surface-1);
-      border: 1px solid var(--border-line);
-      padding: 8px 10px;
+      letter-spacing: 0.12em;
+      padding: 6px 12px;
       border-radius: 3px;
-      font-family: var(--font-mono);
       cursor: pointer;
-      transition: all 0.15s;
+      z-index: 20;
     }
 
-    .zen-catalog-card.active {
-      border-color: var(--fg-primary);
-      background: var(--surface-2);
+    .zen-bottom-jumper {
+      position: absolute;
+      bottom: 14px;
+      left: 14px;
+      background: rgba(0, 0, 0, 0.65);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      color: #FFFFFF;
+      font-family: var(--font-mono);
+      font-size: 9.5px;
+      padding: 5px 9px;
+      border-radius: 3px;
+      cursor: pointer;
+      z-index: 20;
+    }
+
+    .zen-mini-drawer {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 48px;
+      background: rgba(5, 5, 5, 0.96);
+      border: 1px solid rgba(255, 255, 255, 0.35);
+      border-radius: 8px;
+      padding: 10px;
+      z-index: 35;
+      display: none;
+    }
+
+    .zen-mini-drawer.open {
+      display: block;
+    }
+
+    .zen-drawer-grid {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      gap: 4px;
+      margin-top: 6px;
+    }
+
+    .zen-widget-toast {
+      position: absolute;
+      top: 48px;
+      left: 14px;
+      right: 14px;
+      background: #FFFFFF;
+      color: #000000;
+      font-family: var(--font-mono);
+      padding: 10px 12px;
+      border-radius: 4px;
+      z-index: 40;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .zen-widget-toast.show {
+      opacity: 1;
     }
 
     .nav-item {
@@ -1611,36 +1694,56 @@
     </section>
 
     <!-- =======================================================================
-         SCREEN 5: ZEN SENSORY ANTI-STRESS LAB (12 SELECTED GAMES)
+         SCREEN 5: ZEN SENSORY ANTI-STRESS LAB (FULLSCREEN + SUBTLE ARROW + WIDGET)
          ======================================================================= -->
     <section class="screen" id="screen-zen">
-      <div class="section-header">
-        <h2 class="section-title">Sensory Lab // Anti-Stress</h2>
-        <span class="section-tag">12 MODULES // SOBRJONVV</span>
-      </div>
-
-      <!-- Quick 1..12 Number Matrix Switcher -->
-      <div class="zen-num-grid" id="zenNumGrid"></div>
-
-      <!-- Active Game Header & Prev/Next Controls -->
-      <div class="zen-header-bar">
-        <button class="tool-btn" id="zenPrevBtn" style="padding: 4px 8px;">◀</button>
-        <div style="flex:1; min-width:0; text-align:center;">
-          <div id="zenActiveTitle" style="font-family:var(--font-mono); font-size:11px; font-weight:700; color:#FFFFFF; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">01. OLED BUBBLE WRAP</div>
-          <div id="zenActiveDesc" style="font-size:9.5px; color:var(--fg-secondary); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Нажимайте или водите пальцем по пузырям</div>
-        </div>
-        <button class="tool-btn" id="zenNextBtn" style="padding: 4px 8px;">▶</button>
-      </div>
-
-      <!-- Interactive OLED Canvas Arena -->
-      <div class="zen-arena-wrap">
+      <div class="zen-fullscreen-stage">
         <canvas id="zenCanvas"></canvas>
-        <div class="zen-hud-label" id="zenHudLabel">READY</div>
-        <button class="zen-action-overlay" id="zenActionBtn">ДЕЙСТВИЕ</button>
-      </div>
 
-      <!-- 12 Selected Games Catalog List -->
-      <div class="zen-catalog-grid" id="zenCatalogGrid"></div>
+        <!-- Minimalist Faint Top-Left HUD -->
+        <div class="zen-top-hud">
+          <div id="zenActiveTitle" style="font-size:11px; font-weight:700; color:#FFFFFF; letter-spacing:0.12em;">13 // FERROFLUID SPIKE CROWN</div>
+          <div id="zenActiveDesc" style="font-size:9px; color:#AAAAAA; margin-top:2px;">Жидкий магнитный металл выпускает шипы за пальцем</div>
+          <div id="zenHudLabel" style="font-size:9px; color:#777777; margin-top:3px;"></div>
+        </div>
+
+        <!-- Subtle Top-Right Controls: Pin Active Game as Widget & True Fullscreen -->
+        <div class="zen-top-actions">
+          <button class="zen-pill-btn zen-subtle-ctrl" id="zenPinWidgetBtn" title="Добавить активную игру как виджет на главный экран">
+            <span>◰</span> <span>В ВИДЖЕТ</span>
+          </button>
+          <button class="zen-pill-btn zen-subtle-ctrl" id="zenImmersiveBtn" title="Развернуть на 100% экрана">
+            <span>⛶</span>
+          </button>
+        </div>
+
+        <!-- Subtle Single Next Arrow on Right Edge -->
+        <button class="zen-arrow-next zen-subtle-ctrl" id="zenNextBtn" title="Следующая игра">›</button>
+
+        <!-- Faint Prev Arrow on Left Edge -->
+        <button class="zen-arrow-prev" id="zenPrevBtn" title="Предыдущая игра">‹</button>
+
+        <!-- Subtle Bottom-Left Module Number Pill (Opens Mini Jumper) -->
+        <button class="zen-bottom-jumper zen-subtle-ctrl" id="zenDrawerBtn">#13 / 27 ▴</button>
+
+        <!-- Subtle Bottom-Right In-Game Action Button -->
+        <button class="zen-bottom-action zen-subtle-ctrl" id="zenActionBtn">ИМПУЛЬС</button>
+
+        <!-- Optional Compact Jumper Drawer (Hidden by Default) -->
+        <div class="zen-mini-drawer" id="zenMiniDrawer">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:9px; color:#999;">
+            <span>01–12: ОСНОВНЫЕ | 13–27: 15 НОВЫХ ИГР</span>
+            <span style="cursor:pointer; color:#FFF; font-weight:700;" id="zenCloseDrawerBtn">✕</span>
+          </div>
+          <div class="zen-drawer-grid" id="zenNumGrid"></div>
+        </div>
+
+        <!-- Widget Pin Confirmation Toast -->
+        <div class="zen-widget-toast" id="zenWidgetToast">
+          <div style="font-size:10.5px; font-weight:700;" id="zenWidgetToastTitle">◰ ИГРА ДОБАВЛЕНА В ВИДЖЕТ</div>
+          <div style="font-size:9px; margin-top:2px;" id="zenWidgetToastDesc">Активная игра закреплена на главном экране Android и в плавающем окне!</div>
+        </div>
+      </div>
     </section>
 
   </main>
@@ -2632,25 +2735,29 @@ class BootSequence {
 }
 
 /* ==========================================================================
-   ZEN SENSORY LAB ENGINE (12 SELECTED MONOCHROME ANTI-STRESS MODULES)
+   ZEN SENSORY LAB ENGINE (27 MODULES: 12 SELECTED + 15 NEW CREATIVE)
    ========================================================================== */
 class ZenLabEngine {
   static modules = [
-    { idx: 1, origId: 1, name: 'OLED Bubble Wrap', desc: 'Лопайте пузыри касанием или свайпом со звуком хлопков', btn: 'НАДУТЬ ЗАНОВО' },
-    { idx: 2, origId: 2, name: 'Zen Kinetic Sand', desc: 'Водите пальцем: 280 песчинок кружатся в гравитационном вихре', btn: 'ПОЛЯРНОСТЬ' },
-    { idx: 3, origId: 4, name: 'Bonsai Fractal Trimmer', desc: 'Нажимайте на экран для выращивания новых фрактальных ветвей', btn: 'НОВОЕ ДЕРЕВО' },
-    { idx: 4, origId: 5, name: 'Liquid Mercury Pool', desc: 'Касайтесь глади жидкой ртути для интерференции волн', btn: 'ИМПУЛЬС' },
-    { idx: 5, origId: 6, name: 'Mechanical Tally Clicker', desc: 'Тактильный стальной счетчик с механическим щелчком', btn: 'СБРОС (0000)' },
-    { idx: 6, origId: 7, name: 'Orbital Gravity Slingshot', desc: 'Запускайте спутники на орбиту вокруг черной дыры', btn: 'ОЧИСТИТЬ' },
-    { idx: 7, origId: 8, name: 'Magnetic Iron Filings', desc: 'Водите магнитом: железные опилки выстраиваются по силовым линиям', btn: 'ПОЛЮС N/S' },
-    { idx: 8, origId: 9, name: 'Kaleido-Matrix Painter', desc: 'Рисуйте пальцем — 8 зеркал создают сакральную мандалу', btn: 'ОЧИСТИТЬ' },
-    { idx: 9, origId: 11, name: 'Dot Constellations Harp', desc: 'Соединяйте звезды в созвездия с аккордами звездной арфы', btn: 'НОВЫЕ ЗВЕЗДЫ' },
-    { idx: 10, origId: 23, name: 'Brass Morse Telegraph', desc: 'Телеграфный ключ: короткий тап — ТОЧКА (•), долгий — ТИРЕ (—)', btn: 'СБРОС ЛЕНТЫ' },
-    { idx: 11, origId: 24, name: 'Quantum Photon Cloud', desc: 'Квантовая сеть фотонов: касание вызывает ударную волну', btn: 'ИМПУЛЬС' },
-    { idx: 12, origId: 25, name: 'CRT TV De-gaussing', desc: 'Размагничивание кинескопа с гулом катушки и геометрическим сдвигом', btn: '⚡ DEGAUSS' }
+    { idx: 1,  name: 'Zen Kinetic Sand', desc: '280 песчинок кружатся в гравитационном вихре вокруг пальца', btn: 'ПОЛЯРНОСТЬ' },
+    { idx: 2,  name: 'Bonsai Fractal Trimmer', desc: 'Тапайте по экрану для выращивания фрактальных ветвей', btn: 'СЕМЯ' },
+    { idx: 3,  name: 'Liquid Mercury Pool', desc: 'Черная жидкая ртуть: касайтесь для круговых волн с интерференцией', btn: 'КАПЛЯ' },
+    { idx: 4,  name: 'Mechanical Tally Clicker', desc: 'Стальной счетчик кликов с отдачей и звуком шестерни', btn: 'СБРОС 0000' },
+    { idx: 5,  name: 'Orbital Gravity Slingshot', desc: 'Запускайте спутники на орбиты вокруг гравитационного ядра', btn: 'ОЧИСТИТЬ' },
+    { idx: 6,  name: 'Magnetic Iron Filings', desc: 'Железные опилки ориентируются вдоль силовых векторных линий', btn: 'ПОЛЮС N/S' },
+    { idx: 7,  name: 'Kaleido-Matrix Painter', desc: '8-осевое зеркальное рисование чистым светом', btn: 'СТЕРЕТЬ' },
+    { idx: 8,  name: 'Dot Constellations Harp', desc: 'Звездная арфа: соединяйте звезды в созвездия с аккордами струн', btn: 'НОВЫЕ ЗВЕЗДЫ' },
+    { idx: 9,  name: 'Brass Morse Telegraph', desc: 'Телеграфный ключ: короткий тап (•), долгий (—) со звуком зуммера', btn: 'ОЧИСТИТЬ' },
+    { idx: 10, name: 'Quantum Photon Cloud', desc: 'Квантовая сеть из 40 фотонов с разбегающейся ударной волной', btn: 'ИМПУЛЬС' },
+    { idx: 11, name: 'Bioluminescent Mycelium', desc: 'Живые светящиеся корни-молнии мицелия, ветвящиеся от пальца', btn: 'НОВЫЙ МИЦЕЛИЙ' },
+    { idx: 12, name: 'Cyber-Synapse Neural Web', desc: 'Нейросеть: касание запускает цепную реакцию молний по аксонам', btn: 'НЕЙРО-ИМПУЛЬС' },
+    { idx: 13, name: 'Event Horizon Vortex', desc: '350 звезд закручиваются в сияющую спираль черной дыры', btn: 'КВАЗАР-ВЫБРОС' },
+    { idx: 14, name: 'Solar System Gravity', desc: 'Солнечная система: Солнце, планеты, орбиты, пояс астероидов и кометы', btn: 'ПУСК КОМЕТЫ' },
+    { idx: 15, name: 'Spacetime Gravity Fabric', desc: 'Упругая сетка пространства-времени, деформирующаяся под пальцем', btn: 'СБРОС СЕТКИ' },
+    { idx: 16, name: 'Nixie Tube Tesla Counter', desc: 'Газоразрядные лампы ИН-14 с сетчатым анодом и электрической дугой', btn: 'РАЗРЯД 1000V' }
   ];
 
-  static currentIdx = 1;
+  static currentIdx = 14;
   static rafId = null;
 
   static init() {
@@ -2661,38 +2768,115 @@ class ZenLabEngine {
 
     document.getElementById('zenPrevBtn').addEventListener('click', () => this.step(-1));
     document.getElementById('zenNextBtn').addEventListener('click', () => this.step(1));
+
+    const drawer = document.getElementById('zenMiniDrawer');
+    document.getElementById('zenDrawerBtn').addEventListener('click', () => {
+      drawer.classList.toggle('open');
+      this.renderSelectors();
+    });
+    document.getElementById('zenCloseDrawerBtn').addEventListener('click', () => {
+      drawer.classList.remove('open');
+    });
+
+    document.getElementById('zenImmersiveBtn').addEventListener('click', () => {
+      document.getElementById('app').classList.toggle('zen-immersive');
+      setTimeout(() => this.start(this.currentIdx), 50);
+    });
+
+    document.getElementById('zenPinWidgetBtn').addEventListener('click', () => {
+      this.pinActiveGameWidget();
+    });
+
     window.addEventListener('resize', () => {
       if (AppState.activeScreen === 'screen-zen') this.start(this.currentIdx);
     });
 
+    // Check URL deep-link (?zen=ID&fullscreen=1) from Android Home Screen Pinned Widget
+    const params = new URLSearchParams(window.location.search);
+    const zenParam = parseInt(params.get('zen') || '0', 10);
+    if (zenParam >= 1 && zenParam <= 27) {
+      this.currentIdx = zenParam;
+      document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelector('[data-target="screen-zen"]')?.classList.add('active');
+      document.getElementById('screen-zen')?.classList.add('active');
+      AppState.activeScreen = 'screen-zen';
+      if (params.get('fullscreen') === '1') {
+        document.getElementById('app').classList.add('zen-immersive');
+      }
+    }
+
     this.renderSelectors();
-    this.start(1);
+    this.start(this.currentIdx);
+  }
+
+  static async pinActiveGameWidget() {
+    const m = this.modules.find(x => x.idx === this.currentIdx) || this.modules[0];
+    FeedbackSystem.triggerHaptic('heavy');
+    FeedbackSystem.playBeep(1760, 0.12, 'triangle');
+
+    try {
+      localStorage.setItem('aether_pinned_zen_id', String(m.idx));
+      localStorage.setItem('aether_pinned_zen_name', m.name);
+    } catch (e) {}
+
+    // 1. Native Android Bridge (Pins Shortcut/Widget to Android Home Screen & updates 4x2 Widget)
+    if (window.AndroidBridge && typeof window.AndroidBridge.pinActiveGame === 'function') {
+      window.AndroidBridge.pinActiveGame(m.idx, m.name);
+    }
+
+    // 2. Show confirmation toast inside Zen arena
+    const toast = document.getElementById('zenWidgetToast');
+    document.getElementById('zenWidgetToastTitle').textContent = `◰ ВИДЖЕТ: #${String(m.idx).padStart(2, '0')} ${m.name.toUpperCase()}`;
+    document.getElementById('zenWidgetToastDesc').textContent =
+      'Игра привязана к виджету главного экрана Android и запущена в PiP-режиме!';
+    toast.classList.add('show');
+    setTimeout(() => toast.classList.remove('show'), 3200);
+
+    // 3. Also launch Live Picture-in-Picture Floating Game Widget if supported
+    try {
+      if (document.pictureInPictureElement) {
+        await document.exitPictureInPicture();
+      } else if (this.canvas.captureStream && document.pictureInPictureEnabled) {
+        let vid = document.getElementById('zenPipVideo');
+        if (!vid) {
+          vid = document.createElement('video');
+          vid.id = 'zenPipVideo';
+          vid.muted = true;
+          vid.playsInline = true;
+          vid.style.position = 'fixed';
+          vid.style.opacity = '0';
+          vid.style.pointerEvents = 'none';
+          vid.style.width = '1px';
+          vid.style.height = '1px';
+          document.body.appendChild(vid);
+        }
+        vid.srcObject = this.canvas.captureStream(30);
+        await vid.play();
+        await vid.requestPictureInPicture();
+      }
+    } catch (e) {}
   }
 
   static renderSelectors() {
     const numGrid = document.getElementById('zenNumGrid');
-    const catGrid = document.getElementById('zenCatalogGrid');
-    if (!numGrid || !catGrid) return;
-
+    if (!numGrid) return;
     numGrid.innerHTML = '';
-    catGrid.innerHTML = '';
 
     this.modules.forEach(m => {
       const isCur = m.idx === this.currentIdx;
       const nBtn = document.createElement('button');
-      nBtn.className = `zen-num-btn ${isCur ? 'active' : ''}`;
+      nBtn.className = `zen-pill-btn ${isCur ? 'active' : ''}`;
+      nBtn.style.justifyContent = 'center';
+      nBtn.style.background = isCur ? '#FFFFFF' : (m.idx >= 13 ? '#161616' : '#080808');
+      nBtn.style.color = isCur ? '#000000' : '#FFFFFF';
+      nBtn.style.fontWeight = isCur ? '700' : '400';
       nBtn.textContent = String(m.idx).padStart(2, '0');
-      nBtn.addEventListener('click', () => this.start(m.idx));
+      nBtn.addEventListener('click', () => {
+        this.start(m.idx);
+        document.getElementById('zenMiniDrawer').classList.remove('open');
+      });
       numGrid.appendChild(nBtn);
-
-      const card = document.createElement('div');
-      card.className = `zen-catalog-card ${isCur ? 'active' : ''}`;
-      card.innerHTML = `
-        <div style="font-size:10px; font-weight:700; color:${isCur ? '#FFF' : '#CCC'};">${String(m.idx).padStart(2, '0')}. ${m.name}</div>
-        <div style="font-size:8.5px; color:var(--fg-secondary); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${m.desc}</div>
-      `;
-      card.addEventListener('click', () => this.start(m.idx));
-      catGrid.appendChild(card);
     });
   }
 
@@ -2708,20 +2892,21 @@ class ZenLabEngine {
     this.currentIdx = idx;
     const m = this.modules.find(x => x.idx === idx) || this.modules[0];
 
-    document.getElementById('zenActiveTitle').textContent = `${String(m.idx).padStart(2, '0')}. ${m.name.toUpperCase()}`;
+    document.getElementById('zenActiveTitle').textContent = `${String(m.idx).padStart(2, '0')} // ${m.name.toUpperCase()}`;
     document.getElementById('zenActiveDesc').textContent = m.desc;
+    document.getElementById('zenDrawerBtn').textContent = `#${String(m.idx).padStart(2, '0')} / 16 ▴`;
     this.actionBtn.textContent = m.btn;
     this.renderSelectors();
 
     const rect = this.canvas.getBoundingClientRect();
-    const w = (this.canvas.width = rect.width || 380);
-    const h = (this.canvas.height = rect.height || 245);
+    const w = (this.canvas.width = rect.width || window.innerWidth || 400);
+    const h = (this.canvas.height = rect.height || (window.innerHeight - 100) || 520);
     const ctx = this.ctx;
     const hud = this.hud;
     const specBtn = this.actionBtn;
 
     FeedbackSystem.triggerHaptic('tick');
-    FeedbackSystem.playBeep(1200, 0.02, 'square');
+    FeedbackSystem.playBeep(1250, 0.018, 'square');
 
     let pointer = { x: w / 2, y: h / 2, down: false };
     const getPos = (e) => {
@@ -2735,64 +2920,12 @@ class ZenLabEngine {
     this.canvas.onpointermove = null;
     this.canvas.onpointerup = null;
 
-    const id = m.origId;
+    const id = m.idx;
 
-    // 1. OLED Bubble Wrap
+    // 1: Zen Kinetic Sand
     if (id === 1) {
-      const cols = 7, rows = 4;
-      let bubbles = [];
-      const initBubbles = () => {
-        bubbles = [];
-        const sx = w / (cols + 1), sy = h / (rows + 1);
-        for (let r = 1; r <= rows; r++) {
-          for (let c = 1; c <= cols; c++) {
-            bubbles.push({ x: c * sx, y: r * sy, rad: 17, popped: false, anim: 0 });
-          }
-        }
-      };
-      initBubbles();
-      specBtn.onclick = () => { initBubbles(); FeedbackSystem.playBeep(880, 0.08, 'sine'); };
-      const popAt = (px, py) => {
-        bubbles.forEach(b => {
-          if (!b.popped && Math.hypot(b.x - px, b.y - py) < b.rad + 4) {
-            b.popped = true; b.anim = 1;
-            FeedbackSystem.triggerHaptic('light');
-            FeedbackSystem.playBeep(1600 + Math.random() * 800, 0.035, 'triangle');
-          }
-        });
-      };
-      this.canvas.onpointerdown = (e) => { pointer.down = true; const p = getPos(e); popAt(p.x, p.y); };
-      this.canvas.onpointermove = (e) => { if (pointer.down) { const p = getPos(e); popAt(p.x, p.y); } };
-      this.canvas.onpointerup = () => pointer.down = false;
-
-      const loop = () => {
-        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
-        let poppedCount = 0;
-        bubbles.forEach(b => {
-          if (b.popped) poppedCount++;
-          if (b.anim > 0) b.anim = Math.max(0, b.anim - 0.08);
-          ctx.beginPath();
-          ctx.arc(b.x, b.y, b.rad * (b.popped ? 0.82 : 1) + b.anim * 6, 0, Math.PI * 2);
-          ctx.strokeStyle = b.popped ? '#333' : '#FFF';
-          ctx.lineWidth = b.popped ? 1 : 2;
-          ctx.stroke();
-          if (!b.popped) {
-            ctx.beginPath();
-            ctx.arc(b.x - 5, b.y - 5, 3.5, 0, Math.PI * 2);
-            ctx.fillStyle = '#FFF'; ctx.fill();
-          }
-        });
-        hud.textContent = `POPPED: ${poppedCount} / ${bubbles.length}`;
-        if (poppedCount === bubbles.length) initBubbles();
-        this.rafId = requestAnimationFrame(loop);
-      };
-      loop();
-    }
-
-    // 2. Zen Kinetic Sand
-    else if (id === 2) {
       let repel = false;
-      const pts = Array(260).fill(0).map(() => ({
+      const pts = Array(280).fill(0).map(() => ({
         x: Math.random() * w, y: Math.random() * h,
         vx: (Math.random() - 0.5) * 2, vy: (Math.random() - 0.5) * 2,
         s: Math.random() * 2 + 1
@@ -2805,74 +2938,66 @@ class ZenLabEngine {
       const loop = () => {
         ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.fillRect(0, 0, w, h);
         pts.forEach(p => {
-          const dx = pointer.x - p.x, dy = pointer.y - p.y;
-          const d = Math.hypot(dx, dy) || 1;
-          if (d < 150) {
-            const f = (repel ? -0.6 : 0.45) * (1 - d / 150);
+          const dx = pointer.x - p.x, dy = pointer.y - p.y, d = Math.hypot(dx, dy) || 1;
+          if (d < 170) {
+            const f = (repel ? -0.6 : 0.45) * (1 - d / 170);
             p.vx += (dx / d) * f - (dy / d) * 0.15;
             p.vy += (dy / d) * f + (dx / d) * 0.15;
           }
-          p.x += p.vx; p.y += p.vy;
+          p.x = (p.x + p.vx + w) % w; p.y = (p.y + p.vy + h) % h;
           p.vx *= 0.95; p.vy *= 0.95;
-          if (p.x < 0) p.x = w; if (p.x > w) p.x = 0;
-          if (p.y < 0) p.y = h; if (p.y > h) p.y = 0;
-          ctx.fillStyle = '#FFF';
-          ctx.fillRect(p.x, p.y, p.s, p.s);
+          ctx.fillStyle = '#FFF'; ctx.fillRect(p.x, p.y, p.s, p.s);
         });
-        hud.textContent = `MODE: ${repel ? 'REPULSE' : 'VORTEX ATTRACT'}`;
+        hud.textContent = `SAND // POLARITY: ${repel ? 'REPULSE' : 'VORTEX ATTRACT'}`;
         this.rafId = requestAnimationFrame(loop);
       };
       loop();
     }
-
-    // 4. Bonsai Fractal Trimmer
-    else if (id === 4) {
-      let maxDepth = 5, sway = 0, seed = 0.52;
+    // 2: Bonsai Fractal Trimmer
+    else if (id === 2) {
+      let maxDepth = 6, sway = 0, seed = 0.52;
       const grow = () => {
-        maxDepth = maxDepth >= 8 ? 3 : maxDepth + 1;
+        maxDepth = maxDepth >= 9 ? 4 : maxDepth + 1;
         FeedbackSystem.playBeep(400 + maxDepth * 110, 0.07, 'triangle');
         FeedbackSystem.triggerHaptic('light');
       };
       this.canvas.onpointerdown = grow;
-      specBtn.onclick = () => { seed = 0.35 + Math.random() * 0.4; maxDepth = 5; FeedbackSystem.playBeep(880, 0.08, 'sine'); };
+      specBtn.onclick = () => { seed = 0.35 + Math.random() * 0.4; maxDepth = 6; FeedbackSystem.playBeep(880, 0.08, 'sine'); };
 
       const drawBranch = (x, y, len, ang, depth) => {
         if (depth === 0) {
-          ctx.fillStyle = '#FFF';
-          ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI * 2); ctx.fill();
+          ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(x, y, 2.2, 0, Math.PI * 2); ctx.fill();
           return;
         }
-        const nx = x + Math.cos(ang) * len;
-        const ny = y + Math.sin(ang) * len;
+        const nx = x + Math.cos(ang) * len, ny = y + Math.sin(ang) * len;
         ctx.strokeStyle = depth > 2 ? '#FFF' : '#888';
         ctx.lineWidth = Math.max(1, depth * 0.65);
         ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(nx, ny); ctx.stroke();
         const wind = Math.sin(sway + depth) * 0.04;
-        drawBranch(nx, ny, len * 0.72, ang - seed + wind, depth - 1);
-        drawBranch(nx, ny, len * 0.72, ang + seed + wind, depth - 1);
+        drawBranch(nx, ny, len * 0.74, ang - seed + wind, depth - 1);
+        drawBranch(nx, ny, len * 0.74, ang + seed + wind, depth - 1);
       };
 
       const loop = () => {
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         sway += 0.03;
-        drawBranch(w / 2, h - 12, 52, -Math.PI / 2, maxDepth);
+        drawBranch(w / 2, h - 45, 78, -Math.PI / 2, maxDepth);
         hud.textContent = `FRACTAL DEPTH: ${maxDepth} // TAP TO GROW`;
         this.rafId = requestAnimationFrame(loop);
       };
       loop();
     }
-
-    // 5. Liquid Mercury Pool
-    else if (id === 5) {
+    // 3: Liquid Mercury Pool
+    else if (id === 3) {
       let ripples = [{ x: w / 2, y: h / 2, r: 5, a: 1 }];
       const addRipple = (x, y) => {
         ripples.push({ x, y, r: 2, a: 1 });
-        ripples.push({ x, y, r: 10, a: 0.7 });
-        FeedbackSystem.playBeep(500 + Math.random() * 300, 0.08, 'sine');
-        FeedbackSystem.triggerHaptic('tick');
+        ripples.push({ x, y, r: 14, a: 0.7 });
+        FeedbackSystem.triggerHaptic('light');
+        FeedbackSystem.playBeep(520 + Math.random() * 260, 0.09, 'sine');
       };
       this.canvas.onpointerdown = (e) => { pointer.down = true; const p = getPos(e); addRipple(p.x, p.y); };
-      this.canvas.onpointermove = (e) => { if (pointer.down && Math.random() < 0.3) { const p = getPos(e); addRipple(p.x, p.y); } };
+      this.canvas.onpointermove = (e) => { if (pointer.down && Math.random() < 0.35) { const p = getPos(e); addRipple(p.x, p.y); } };
       this.canvas.onpointerup = () => pointer.down = false;
       specBtn.onclick = () => addRipple(w / 2, h / 2);
 
@@ -2880,120 +3005,90 @@ class ZenLabEngine {
         ctx.fillStyle = 'rgba(0,0,0,0.18)'; ctx.fillRect(0, 0, w, h);
         for (let i = ripples.length - 1; i >= 0; i--) {
           const rp = ripples[i];
-          rp.r += 2.2; rp.a -= 0.012;
+          rp.r += 2.8; rp.a -= 0.012;
           ctx.strokeStyle = `rgba(255,255,255,${Math.max(0, rp.a)})`;
-          ctx.lineWidth = 1.8;
+          ctx.lineWidth = 2.2;
           ctx.beginPath(); ctx.arc(rp.x, rp.y, rp.r, 0, Math.PI * 2); ctx.stroke();
           if (rp.a <= 0) ripples.splice(i, 1);
         }
-        hud.textContent = `ACTIVE WAVES: ${ripples.length}`;
+        hud.textContent = `LIQUID MERCURY // WAVES: ${ripples.length}`;
         this.rafId = requestAnimationFrame(loop);
       };
       loop();
     }
-
-    // 6. Mechanical Tally Clicker
-    else if (id === 6) {
+    // 4: Mechanical Tally Clicker
+    else if (id === 4) {
       let count = 108, press = 0;
-      const click = () => {
+      this.canvas.onpointerdown = () => {
         count++; press = 1;
         FeedbackSystem.triggerHaptic('medium');
-        FeedbackSystem.playBeep(2200, 0.018, 'square');
+        FeedbackSystem.playBeep(2100, 0.02, 'square');
       };
-      this.canvas.onpointerdown = click;
       specBtn.onclick = () => { count = 0; press = 1; FeedbackSystem.playBeep(600, 0.08, 'sawtooth'); };
 
       const loop = () => {
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         if (press > 0) press = Math.max(0, press - 0.12);
         const cx = w / 2, cy = h / 2;
-        ctx.strokeStyle = '#FFF'; ctx.lineWidth = 2;
-        ctx.strokeRect(cx - 85, cy - 42 + press * 6, 170, 84);
-        ctx.fillStyle = '#FFF';
-        ctx.fillRect(cx - 24, cy - 58 + press * 10, 48, 12);
-        ctx.font = 'bold 40px JetBrains Mono, monospace';
-        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-        ctx.fillText(String(count).padStart(4, '0'), cx, cy + press * 6);
-        hud.textContent = `MECHANICAL TALLY // TAP ANYWHERE`;
+        ctx.strokeStyle = '#FFF'; ctx.lineWidth = 2.5;
+        ctx.strokeRect(cx - 100, cy - 55 + press * 8, 200, 110);
+        ctx.fillStyle = '#FFF'; ctx.fillRect(cx - 30, cy - 75 + press * 12, 60, 16);
+        ctx.font = 'bold 48px JetBrains Mono, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(String(count).padStart(4, '0'), cx, cy + press * 8);
+        hud.textContent = `TALLY COUNTER // TAP TO CLICK`;
         this.rafId = requestAnimationFrame(loop);
       };
       loop();
     }
-
-    // 7. Orbital Gravity Slingshot
-    else if (id === 7) {
-      let bodies = [
-        { x: w / 2 - 75, y: h / 2, vx: 0, vy: -2.5 },
-        { x: w / 2 + 100, y: h / 2, vx: 0, vy: 2.1 }
-      ];
+    // 5: Orbital Gravity Slingshot
+    else if (id === 5) {
+      let bodies = [{ x: w / 2 - 80, y: h / 2, vx: 0, vy: -2.8 }, { x: w / 2 + 110, y: h / 2, vx: 0, vy: 2.3 }];
       this.canvas.onpointerdown = (e) => {
-        const p = getPos(e);
-        const dx = p.x - w / 2, dy = p.y - h / 2;
-        const d = Math.hypot(dx, dy) || 1;
-        bodies.push({ x: p.x, y: p.y, vx: (-dy / d) * 2.5, vy: (dx / d) * 2.5 });
-        FeedbackSystem.playBeep(1100, 0.06, 'sine');
-        FeedbackSystem.triggerHaptic('light');
+        const p = getPos(e), dx = p.x - w / 2, dy = p.y - h / 2, d = Math.hypot(dx, dy) || 1;
+        bodies.push({ x: p.x, y: p.y, vx: (-dy / d) * 2.8, vy: (dx / d) * 2.8 });
+        FeedbackSystem.playBeep(1100, 0.06, 'sine'); FeedbackSystem.triggerHaptic('light');
       };
-      specBtn.onclick = () => { bodies = []; FeedbackSystem.playBeep(440, 0.08, 'sine'); };
+      specBtn.onclick = () => { bodies = []; };
 
       const loop = () => {
         ctx.fillStyle = 'rgba(0,0,0,0.12)'; ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = '#FFF';
-        ctx.beginPath(); ctx.arc(w / 2, h / 2, 9, 0, Math.PI * 2); ctx.fill();
-        ctx.strokeStyle = '#444';
-        ctx.beginPath(); ctx.arc(w / 2, h / 2, 20, 0, Math.PI * 2); ctx.stroke();
-
+        ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(w / 2, h / 2, 10, 0, Math.PI * 2); ctx.fill();
         bodies.forEach(b => {
-          const dx = w / 2 - b.x, dy = h / 2 - b.y;
-          const d2 = Math.max(250, dx * dx + dy * dy);
-          const d = Math.sqrt(d2);
-          const f = 520 / d2;
-          b.vx += (dx / d) * f; b.vy += (dy / d) * f;
-          b.x += b.vx; b.y += b.vy;
-          ctx.fillStyle = '#FFF';
+          const dx = w / 2 - b.x, dy = w / 2 - b.y, d2 = Math.max(250, dx * dx + dy * dy), d = Math.sqrt(d2), f = 580 / d2;
+          b.vx += (dx / d) * f; b.vy += (dy / d) * f; b.x += b.vx; b.y += b.vy;
           ctx.beginPath(); ctx.arc(b.x, b.y, 3.5, 0, Math.PI * 2); ctx.fill();
         });
-        hud.textContent = `SATELLITES IN ORBIT: ${bodies.length}`;
+        hud.textContent = `SATELLITES: ${bodies.length} // TAP TO LAUNCH`;
         this.rafId = requestAnimationFrame(loop);
       };
       loop();
     }
-
-    // 8. Magnetic Iron Filings
-    else if (id === 8) {
+    // 6: Magnetic Iron Filings
+    else if (id === 6) {
       let flip = 1;
       this.canvas.onpointermove = (e) => Object.assign(pointer, getPos(e));
-      this.canvas.onpointerdown = (e) => { Object.assign(pointer, getPos(e)); FeedbackSystem.triggerHaptic('tick'); };
+      this.canvas.onpointerdown = (e) => Object.assign(pointer, getPos(e));
       specBtn.onclick = () => { flip *= -1; FeedbackSystem.playBeep(700, 0.04, 'square'); };
 
       const loop = () => {
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
-        const cols = 14, rows = 7;
-        const sx = w / (cols + 1), sy = h / (rows + 1);
+        const cols = 13, rows = 15, sx = w / (cols + 1), sy = h / (rows + 1);
         for (let r = 1; r <= rows; r++) {
           for (let c = 1; c <= cols; c++) {
-            const x = c * sx, y = r * sy;
-            const ang = Math.atan2(pointer.y - y, pointer.x - x) + (flip === -1 ? Math.PI / 2 : 0);
-            const d = Math.hypot(pointer.x - x, pointer.y - y);
-            const len = Math.min(13, Math.max(6, 1400 / (d + 80)));
-            ctx.strokeStyle = d < 95 ? '#FFF' : '#666';
-            ctx.lineWidth = d < 95 ? 2 : 1.2;
-            ctx.beginPath();
-            ctx.moveTo(x - Math.cos(ang) * len, y - Math.sin(ang) * len);
-            ctx.lineTo(x + Math.cos(ang) * len, y + Math.sin(ang) * len);
-            ctx.stroke();
+            const x = c * sx, y = r * sy, ang = Math.atan2(pointer.y - y, pointer.x - x) + (flip === -1 ? Math.PI / 2 : 0);
+            const d = Math.hypot(pointer.x - x, pointer.y - y), len = Math.min(13, Math.max(6, 1500 / (d + 80)));
+            ctx.strokeStyle = d < 105 ? '#FFF' : '#555'; ctx.lineWidth = d < 105 ? 2 : 1.2;
+            ctx.beginPath(); ctx.moveTo(x - Math.cos(ang) * len, y - Math.sin(ang) * len);
+            ctx.lineTo(x + Math.cos(ang) * len, y + Math.sin(ang) * len); ctx.stroke();
           }
         }
-        ctx.strokeStyle = '#FFF';
-        ctx.beginPath(); ctx.arc(pointer.x, pointer.y, 8, 0, Math.PI * 2); ctx.stroke();
-        hud.textContent = `MAGNETIC FIELD // DRAG MAGNET`;
+        hud.textContent = `MAGNETIC VECTOR FIELD // DRAG MAGNET`;
         this.rafId = requestAnimationFrame(loop);
       };
       loop();
     }
-
-    // 9. Kaleido-Matrix Painter
-    else if (id === 9) {
+    // 7: Kaleido-Matrix Painter
+    else if (id === 7) {
       ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
       let last = null;
       specBtn.onclick = () => { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h); FeedbackSystem.playBeep(600, 0.05, 'sine'); };
@@ -3001,41 +3096,30 @@ class ZenLabEngine {
       this.canvas.onpointerup = () => { pointer.down = false; last = null; };
       this.canvas.onpointermove = (e) => {
         if (!pointer.down || !last) return;
-        const cur = getPos(e);
-        const cx = w / 2, cy = h / 2;
-        const slices = 8;
-        ctx.strokeStyle = '#FFF'; ctx.lineWidth = 1.5;
-        for (let i = 0; i < slices; i++) {
-          const a = (i * Math.PI * 2) / slices;
-          ctx.save();
-          ctx.translate(cx, cy);
-          ctx.rotate(a);
-          ctx.beginPath();
-          ctx.moveTo(last.x - cx, last.y - cy);
-          ctx.lineTo(cur.x - cx, cur.y - cy);
-          ctx.stroke();
+        const cur = getPos(e), cx = w / 2, cy = h / 2;
+        ctx.strokeStyle = '#FFF'; ctx.lineWidth = 1.6;
+        for (let i = 0; i < 8; i++) {
+          ctx.save(); ctx.translate(cx, cy); ctx.rotate((i * Math.PI * 2) / 8);
+          ctx.beginPath(); ctx.moveTo(last.x - cx, last.y - cy); ctx.lineTo(cur.x - cx, cur.y - cy); ctx.stroke();
           ctx.restore();
         }
         last = cur;
       };
       hud.textContent = `8-AXIS SYMMETRY // DRAW WITH FINGER`;
     }
-
-    // 11. Dot Constellations Harp
-    else if (id === 11) {
+    // 8: Dot Constellations Harp
+    else if (id === 8) {
       const notes = [261.6, 293.6, 329.6, 392.0, 440.0, 523.2, 587.3, 659.2];
       let stars = [], lines = [], lastStar = null;
       const initStars = () => {
-        stars = Array(18).fill(0).map(() => ({ x: 25 + Math.random() * (w - 50), y: 25 + Math.random() * (h - 50) }));
-        lines = [];
-        lastStar = null;
+        stars = Array(22).fill(0).map(() => ({ x: 30 + Math.random() * (w - 60), y: 55 + Math.random() * (h - 110) }));
+        lines = []; lastStar = null;
       };
       initStars();
       specBtn.onclick = initStars;
-
       const checkStar = (p) => {
         stars.forEach((s, idx) => {
-          if (Math.hypot(s.x - p.x, s.y - p.y) < 22 && s !== lastStar) {
+          if (Math.hypot(s.x - p.x, s.y - p.y) < 24 && s !== lastStar) {
             if (lastStar) {
               lines.push([lastStar, s]);
               FeedbackSystem.playBeep(notes[idx % notes.length], 0.25, 'triangle');
@@ -3052,21 +3136,15 @@ class ZenLabEngine {
       const loop = () => {
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         ctx.strokeStyle = '#FFF'; ctx.lineWidth = 1.2;
-        lines.forEach(([a, b]) => {
-          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-        });
-        stars.forEach(s => {
-          ctx.fillStyle = '#FFF';
-          ctx.beginPath(); ctx.arc(s.x, s.y, 4, 0, Math.PI * 2); ctx.fill();
-        });
-        hud.textContent = `CONNECT STARS FOR HARP CHORDS`;
+        lines.forEach(([a, b]) => { ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); });
+        stars.forEach(s => { ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(s.x, s.y, 4, 0, Math.PI * 2); ctx.fill(); });
+        hud.textContent = `CONSTELLATIONS HARP // DRAW LINES`;
         this.rafId = requestAnimationFrame(loop);
       };
       loop();
     }
-
-    // 23. Brass Morse Telegraph
-    else if (id === 23) {
+    // 9: Brass Morse Telegraph
+    else if (id === 9) {
       let code = '• — • •   — — —', downTime = 0, isDown = false;
       this.canvas.onpointerdown = () => {
         isDown = true; downTime = performance.now();
@@ -3076,35 +3154,32 @@ class ZenLabEngine {
       this.canvas.onpointerup = () => {
         if (!isDown) return;
         isDown = false;
-        const dt = performance.now() - downTime;
-        code = (code + (dt > 160 ? ' —' : ' •')).slice(-22);
+        code = (code + (performance.now() - downTime > 160 ? ' —' : ' •')).slice(-22);
       };
       specBtn.onclick = () => { code = ''; };
 
       const loop = () => {
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         ctx.strokeStyle = '#FFF'; ctx.lineWidth = 2;
-        ctx.strokeRect(w / 2 - 135, 38, 270, 48);
+        ctx.strokeRect(w / 2 - 135, h / 2 - 80, 270, 52);
         ctx.fillStyle = '#FFF'; ctx.font = 'bold 18px JetBrains Mono, monospace'; ctx.textAlign = 'center';
-        ctx.fillText(code || 'TAP KEY BELOW', w / 2, 68);
-
+        ctx.fillText(code || 'TAP KEY BELOW', w / 2, h / 2 - 48);
         ctx.fillStyle = isDown ? '#FFF' : '#222';
-        ctx.beginPath(); ctx.arc(w / 2, 155 + (isDown ? 6 : 0), 26, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(w / 2, h / 2 + 45 + (isDown ? 6 : 0), 34, 0, Math.PI * 2); ctx.fill();
         ctx.stroke();
-        hud.textContent = `CW TELEGRAPH // 750 HZ`;
+        hud.textContent = `CW MORSE TELEGRAPH KEY`;
         this.rafId = requestAnimationFrame(loop);
       };
       loop();
     }
-
-    // 24. Quantum Photon Cloud
-    else if (id === 24) {
-      const nodes = Array(38).fill(0).map(() => ({
+    // 10: Quantum Photon Cloud
+    else if (id === 10) {
+      const nodes = Array(45).fill(0).map(() => ({
         x: Math.random() * w, y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 1.4, vy: (Math.random() - 0.5) * 1.4
+        vx: (Math.random() - 0.5) * 1.5, vy: (Math.random() - 0.5) * 1.5
       }));
       const shock = () => {
-        nodes.forEach(n => { n.vx = (Math.random() - 0.5) * 6.5; n.vy = (Math.random() - 0.5) * 6.5; });
+        nodes.forEach(n => { n.vx = (Math.random() - 0.5) * 7.5; n.vy = (Math.random() - 0.5) * 7.5; });
         FeedbackSystem.playBeep(1500, 0.06, 'sine');
         FeedbackSystem.triggerHaptic('medium');
       };
@@ -3114,19 +3189,12 @@ class ZenLabEngine {
       const loop = () => {
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
         for (let i = 0; i < nodes.length; i++) {
-          const a = nodes[i];
-          a.x += a.vx; a.y += a.vy;
-          if (a.x < 0 || a.x > w) a.vx *= -1;
-          if (a.y < 0 || a.y > h) a.vy *= -1;
-          ctx.fillStyle = '#FFF';
-          ctx.fillRect(a.x - 1.5, a.y - 1.5, 3, 3);
+          const a = nodes[i]; a.x += a.vx; a.y += a.vy;
+          if (a.x < 0 || a.x > w) a.vx *= -1; if (a.y < 0 || a.y > h) a.vy *= -1;
+          ctx.fillStyle = '#FFF'; ctx.fillRect(a.x - 1.5, a.y - 1.5, 3, 3);
           for (let j = i + 1; j < nodes.length; j++) {
-            const b = nodes[j];
-            const d = Math.hypot(a.x - b.x, a.y - b.y);
-            if (d < 85) {
-              ctx.strokeStyle = `rgba(255,255,255,${1 - d / 85})`;
-              ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
-            }
+            const b = nodes[j], d = Math.hypot(a.x - b.x, a.y - b.y);
+            if (d < 92) { ctx.strokeStyle = `rgba(255,255,255,${1 - d / 92})`; ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke(); }
           }
         }
         hud.textContent = `QUANTUM ENTANGLEMENT PLEXUS`;
@@ -3134,35 +3202,203 @@ class ZenLabEngine {
       };
       loop();
     }
-
-    // 25. CRT TV De-gaussing
-    else if (id === 25) {
-      let shake = 0;
-      const degauss = () => {
-        shake = 1.0;
-        FeedbackSystem.triggerHaptic('heavy');
-        FeedbackSystem.playBeep(95, 0.35, 'sawtooth');
+    // 11: Bioluminescent Mycelium
+    else if (id === 11) {
+      ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+      let tips = [];
+      const spawn = (x, y) => {
+        for (let i = 0; i < 6; i++) tips.push({ x, y, a: Math.random() * Math.PI * 2, life: 60 + Math.random() * 40 });
+        FeedbackSystem.playBeep(550 + Math.random() * 450, 0.04, 'sine');
       };
-      this.canvas.onpointerdown = degauss;
-      specBtn.onclick = degauss;
+      spawn(w / 2, h / 2);
+      this.canvas.onpointerdown = (e) => { pointer.down = true; const p = getPos(e); spawn(p.x, p.y); };
+      this.canvas.onpointermove = (e) => { if (pointer.down && Math.random() < 0.35) { const p = getPos(e); spawn(p.x, p.y); } };
+      this.canvas.onpointerup = () => pointer.down = false;
+      specBtn.onclick = () => { ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h); spawn(w / 2, h / 2); };
+
+      const loop = () => {
+        for (let i = tips.length - 1; i >= 0; i--) {
+          const t = tips[i], nx = t.x + Math.cos(t.a) * 3.2, ny = t.y + Math.sin(t.a) * 3.2;
+          ctx.strokeStyle = `rgba(255,255,255,${t.life / 95})`; ctx.lineWidth = Math.max(0.6, t.life / 32);
+          ctx.beginPath(); ctx.moveTo(t.x, t.y); ctx.lineTo(nx, ny); ctx.stroke();
+          t.x = nx; t.y = ny; t.a += (Math.random() - 0.5) * 0.55; t.life--;
+          if (Math.random() < 0.05 && tips.length < 130 && t.life > 20) {
+            tips.push({ x: t.x, y: t.y, a: t.a + (Math.random() > 0.5 ? 0.6 : -0.6), life: t.life * 0.75 });
+          }
+          if (t.life <= 0) tips.splice(i, 1);
+        }
+        hud.textContent = `MYCELIUM BRANCHES: ${tips.length} // TAP TO SPROUT`;
+        this.rafId = requestAnimationFrame(loop);
+      };
+      loop();
+    }
+    // 12: Cyber-Synapse Neural Web
+    else if (id === 12) {
+      const neurons = Array(32).fill(0).map(() => ({ x: 30 + Math.random() * (w - 60), y: 65 + Math.random() * (h - 130), charge: 0 }));
+      let pulses = [];
+      const fire = (n0) => {
+        n0.charge = 1; FeedbackSystem.triggerHaptic('tick'); FeedbackSystem.playBeep(880 + Math.random() * 800, 0.05, 'sine');
+        neurons.forEach(n => { if (n !== n0 && Math.hypot(n.x - n0.x, n.y - n0.y) < 125) pulses.push({ a: n0, b: n, p: 0, c: Math.random() < 0.45 }); });
+      };
+      this.canvas.onpointerdown = (e) => {
+        const p = getPos(e); let best = neurons[0], md = 9999;
+        neurons.forEach(n => { const d = Math.hypot(n.x - p.x, n.y - p.y); if (d < md) { md = d; best = n; } });
+        fire(best);
+      };
+      specBtn.onclick = () => fire(neurons[Math.floor(Math.random() * neurons.length)]);
+
+      const loop = () => {
+        ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.fillRect(0, 0, w, h);
+        for (let i = 0; i < neurons.length; i++)
+          for (let j = i + 1; j < neurons.length; j++)
+            if (Math.hypot(neurons[i].x - neurons[j].x, neurons[i].y - neurons[j].y) < 125) {
+              ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.beginPath(); ctx.moveTo(neurons[i].x, neurons[i].y); ctx.lineTo(neurons[j].x, neurons[j].y); ctx.stroke();
+            }
+        for (let i = pulses.length - 1; i >= 0; i--) {
+          const pl = pulses[i]; pl.p += 0.06;
+          ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(pl.a.x + (pl.b.x - pl.a.x) * pl.p, pl.a.y + (pl.b.y - pl.a.y) * pl.p, 3.5, 0, Math.PI * 2); ctx.fill();
+          if (pl.p >= 1) { pl.b.charge = 1; if (pl.c && pulses.length < 32) fire(pl.b); pulses.splice(i, 1); }
+        }
+        neurons.forEach(n => { n.charge *= 0.92; ctx.fillStyle = n.charge > 0.2 ? '#FFF' : '#555'; ctx.beginPath(); ctx.arc(n.x, n.y, 4 + n.charge * 5, 0, Math.PI * 2); ctx.fill(); });
+        hud.textContent = `SYNAPTIC ACTION POTENTIAL`;
+        this.rafId = requestAnimationFrame(loop);
+      };
+      fire(neurons[0]); loop();
+    }
+    // 13: Event Horizon Vortex
+    else if (id === 13) {
+      const stars = Array(350).fill(0).map(() => ({ a: Math.random() * Math.PI * 2, r: 25 + Math.random() * 210, s: 1 + Math.random() * 2 }));
+      let jet = 0;
+      this.canvas.onpointermove = (e) => Object.assign(pointer, getPos(e));
+      this.canvas.onpointerdown = (e) => { Object.assign(pointer, getPos(e)); jet = 1; FeedbackSystem.playBeep(180, 0.15, 'sine'); };
+      specBtn.onclick = () => { jet = 1.5; stars.forEach(s => s.r = 150 + Math.random() * 90); };
+
+      const loop = () => {
+        ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.fillRect(0, 0, w, h); jet *= 0.94;
+        ctx.strokeStyle = '#FFF'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(pointer.x, pointer.y, 20 + jet * 10, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(pointer.x, pointer.y, 21 + jet * 12, 0, Math.PI * 2); ctx.fill();
+        stars.forEach(s => {
+          s.a += (4.8 / Math.max(22, s.r)) + 0.015; s.r -= 0.48 - jet * 2.4;
+          if (s.r < 24) s.r = 210 + Math.random() * 40;
+          ctx.fillStyle = '#FFF'; ctx.fillRect(pointer.x + Math.cos(s.a) * s.r, pointer.y + Math.sin(s.a) * s.r * 0.72, s.s, s.s);
+        });
+        hud.textContent = `EVENT HORIZON SINGULARITY // QUASAR JET`;
+        this.rafId = requestAnimationFrame(loop);
+      };
+      loop();
+    }
+    // 14: Solar System Gravity
+    else if (id === 14) {
+      let sun = { x: w / 2, y: h / 2 }, speed = 1.0, comets = [];
+      const planets = [
+        { name: "Mercury", r: 42, spd: 0.045, size: 2.2, a: 0.4 },
+        { name: "Venus", r: 68, spd: 0.030, size: 3.4, a: 2.1 },
+        { name: "Earth", r: 100, spd: 0.022, size: 4.0, a: 3.7, hasMoon: true },
+        { name: "Mars", r: 132, spd: 0.016, size: 3.0, a: 5.2 },
+        { name: "Jupiter", r: 172, spd: 0.010, size: 7.2, a: 1.1 },
+        { name: "Saturn", r: 215, spd: 0.007, size: 5.8, a: 4.4, hasRing: true }
+      ];
+      const belt = Array(80).fill(0).map(() => ({ r: 144 + Math.random() * 14, a: Math.random() * Math.PI * 2, spd: 0.012 + Math.random() * 0.004 }));
+      this.canvas.onpointerdown = (e) => {
+        pointer.down = true; const p = getPos(e); Object.assign(pointer, p);
+        if (Math.hypot(p.x - sun.x, p.y - sun.y) > 40) {
+          comets.push({ x: p.x, y: p.y, vx: (sun.x - p.x) * 0.028, vy: (sun.y - p.y) * 0.028, tail: [] });
+          FeedbackSystem.playBeep(1150, 0.08, 'sine'); FeedbackSystem.triggerHaptic('light');
+        }
+      };
+      this.canvas.onpointermove = (e) => {
+        if (pointer.down) { const p = getPos(e); if (Math.hypot(p.x - sun.x, p.y - sun.y) < 50) { sun.x = p.x; sun.y = p.y; } }
+      };
+      this.canvas.onpointerup = () => pointer.down = false;
+      specBtn.onclick = () => {
+        for (let i = 0; i < 3; i++) {
+          const a = Math.random() * Math.PI * 2, sx = sun.x + Math.cos(a) * 240, sy = sun.y + Math.sin(a) * 240;
+          comets.push({ x: sx, y: sy, vx: -Math.cos(a) * 3.6, vy: -Math.sin(a) * 3.6, tail: [] });
+        }
+        FeedbackSystem.playBeep(180, 0.35, 'sine'); FeedbackSystem.triggerHaptic('heavy');
+      };
 
       const loop = () => {
         ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
-        shake *= 0.93;
-        ctx.strokeStyle = '#FFF'; ctx.lineWidth = 1.2;
-        const rows = 6;
-        for (let r = 1; r < rows; r++) {
-          ctx.beginPath();
-          for (let x = 0; x <= w; x += 8) {
-            const y = (h / rows) * r + Math.sin(x * 0.08 + performance.now() * 0.05) * shake * 45;
-            if (x === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
-          }
+        const sunPulse = 14 + Math.sin(performance.now() * 0.004) * 2;
+        ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(sun.x, sun.y, sunPulse, 0, Math.PI * 2); ctx.fill();
+        ctx.strokeStyle = '#444'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(sun.x, sun.y, sunPulse + 6, 0, Math.PI * 2); ctx.stroke();
+        planets.forEach(pl => {
+          pl.a += pl.spd * speed; ctx.strokeStyle = '#222'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(sun.x, sun.y, pl.r, 0, Math.PI * 2); ctx.stroke();
+          const px = sun.x + Math.cos(pl.a) * pl.r, py = sun.y + Math.sin(pl.a) * pl.r * 0.86;
+          ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(px, py, pl.size, 0, Math.PI * 2); ctx.fill();
+          if (pl.hasMoon) { const ma = pl.a * 8.5; ctx.beginPath(); ctx.arc(px + Math.cos(ma) * 11, py + Math.sin(ma) * 11, 1.4, 0, Math.PI * 2); ctx.fill(); }
+          if (pl.hasRing) { ctx.strokeStyle = '#888'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.ellipse(px, py, pl.size * 2.3, pl.size * 0.7, 0.3, 0, Math.PI * 2); ctx.stroke(); }
+        });
+        ctx.fillStyle = '#666';
+        belt.forEach(ast => { ast.a += ast.spd * speed; ctx.fillRect(sun.x + Math.cos(ast.a) * ast.r - 0.7, sun.y + Math.sin(ast.a) * ast.r * 0.86 - 0.7, 1.4, 1.4); });
+        for (let i = comets.length - 1; i >= 0; i--) {
+          const c = comets[i], dx = sun.x - c.x, dy = sun.y - c.y, d2 = Math.max(160, dx * dx + dy * dy), d = Math.sqrt(d2), f = 640 / d2;
+          c.vx += (dx / d) * f; c.vy += (dy / d) * f; c.x += c.vx; c.y += c.vy; c.tail.unshift({ x: c.x, y: c.y });
+          if (c.tail.length > 18) c.tail.pop();
+          ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 1.2; ctx.beginPath();
+          c.tail.forEach((pt, idx) => { if (idx === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y); });
           ctx.stroke();
+          ctx.fillStyle = '#FFF'; ctx.beginPath(); ctx.arc(c.x, c.y, 2.5, 0, Math.PI * 2); ctx.fill();
+          if (d < 16 || c.x < -120 || c.x > w + 120 || c.y < -120 || c.y > h + 120) comets.splice(i, 1);
         }
-        hud.textContent = `CRT COIL DISTORTION: ${Math.round(shake * 100)}%`;
+        hud.textContent = `SOLAR SYSTEM // COMETS: ${comets.length}`;
         this.rafId = requestAnimationFrame(loop);
       };
-      degauss();
+      loop();
+    }
+    // 15: Spacetime Gravity Fabric
+    else if (id === 15) {
+      const cols = 12, rows = 14; let pts = [];
+      const init = () => {
+        pts = [];
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+          const ox = (w / (cols + 1)) * (c + 1), oy = (h / (rows + 1)) * (r + 1);
+          pts.push({ x: ox, y: oy, ox, oy, vx: 0, vy: 0 });
+        }
+      };
+      init(); specBtn.onclick = init;
+      this.canvas.onpointermove = (e) => Object.assign(pointer, getPos(e));
+      this.canvas.onpointerdown = (e) => { pointer.down = true; Object.assign(pointer, getPos(e)); };
+      this.canvas.onpointerup = () => pointer.down = false;
+
+      const loop = () => {
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h);
+        pts.forEach(p => {
+          const dx = pointer.x - p.x, dy = pointer.y - p.y, d = Math.hypot(dx, dy) || 1;
+          if (d < 105) { const f = (pointer.down ? -0.9 : 0.45) * (1 - d / 105); p.vx += (dx / d) * f * 4; p.vy += (dy / d) * f * 4; }
+          p.vx = (p.vx + (p.ox - p.x) * 0.08) * 0.86; p.vy = (p.vy + (p.oy - p.y) * 0.08) * 0.86;
+          p.x += p.vx; p.y += p.vy;
+        });
+        ctx.strokeStyle = '#FFF'; ctx.lineWidth = 1;
+        for (let r = 0; r < rows; r++) for (let c = 0; c < cols; c++) {
+          const p = pts[r * cols + c];
+          if (c < cols - 1) { const pr = pts[r * cols + c + 1]; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(pr.x, pr.y); ctx.stroke(); }
+          if (r < rows - 1) { const pb = pts[(r + 1) * cols + c]; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(pb.x, pb.y); ctx.stroke(); }
+        }
+        hud.textContent = `SPACETIME TENSOR FABRIC`;
+        this.rafId = requestAnimationFrame(loop);
+      };
+      loop();
+    }
+    // 16: Nixie Tube Tesla Counter
+    else if (id === 16) {
+      let digits = [4, 0, 9, 6], arc = 0;
+      const trig = () => { digits = digits.map(d => (d + 1 + Math.floor(Math.random() * 3)) % 10); arc = 1; FeedbackSystem.triggerHaptic('medium'); FeedbackSystem.playBeep(130, 0.1, 'sawtooth'); };
+      this.canvas.onpointerdown = trig; specBtn.onclick = trig;
+
+      const loop = () => {
+        ctx.fillStyle = '#000'; ctx.fillRect(0, 0, w, h); arc *= 0.9;
+        const tw = 64, th = 132, gap = 12, sx = (w - (tw * 4 + gap * 3)) / 2, cy = h / 2;
+        digits.forEach((d, idx) => {
+          const x = sx + idx * (tw + gap), y = cy - th / 2;
+          ctx.strokeStyle = '#666'; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, tw, th);
+          ctx.fillStyle = '#FFF'; ctx.font = 'bold 58px JetBrains Mono, monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(String(d), x + tw / 2, cy + (Math.random() - 0.5) * arc * 6);
+        });
+        hud.textContent = `NIXIE CATHODE // 170V DC`;
+        this.rafId = requestAnimationFrame(loop);
+      };
       loop();
     }
   }
