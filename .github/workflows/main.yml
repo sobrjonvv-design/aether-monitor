@@ -21,10 +21,8 @@ jobs:
 
     - name: Assemble Crash-Proof Android Project
       run: |
-        # Clean duplicate files from web uploads if any
         rm -f "build.gradle (1).kts" "index (2).html" "build-apk.yml"
 
-        # Directory structure
         mkdir -p app/src/main/java/com/aether/monitor/widget
         mkdir -p app/src/main/res/layout
         mkdir -p app/src/main/res/xml
@@ -32,15 +30,77 @@ jobs:
         mkdir -p app/src/main/res/values
         mkdir -p app/src/main/assets/www
 
-        # Copy uploaded files from root into Android project structure
+        # Copy resources from root
         cp bg_widget_oled.xml ic_concentric_logo.xml app/src/main/res/drawable/ 2>/dev/null || true
-        cp colors.xml strings.xml themes.xml app/src/main/res/values/ 2>/dev/null || true
+        cp colors.xml strings.xml app/src/main/res/values/ 2>/dev/null || true
         cp widget_telemetry_info.xml app/src/main/res/xml/ 2>/dev/null || true
         cp widget_telemetry.xml app/src/main/res/layout/ 2>/dev/null || true
         cp MainActivity.kt app/src/main/java/com/aether/monitor/ 2>/dev/null || true
         cp AetherWidgetProvider.kt AetherAnimationService.kt app/src/main/java/com/aether/monitor/widget/ 2>/dev/null || true
-        cp AndroidManifest.xml app/src/main/ 2>/dev/null || true
         cp index.html app/src/main/assets/www/ 2>/dev/null || true
+
+        # Fail-Proof Themes (Prevents missing style errors)
+        cat << 'EOF' > app/src/main/res/values/themes.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <resources>
+            <style name="Theme.AetherOLED" parent="@android:style/Theme.NoTitleBar.Fullscreen">
+                <item name="android:windowBackground">@color/oled_black</item>
+                <item name="android:colorBackground">@color/oled_black</item>
+                <item name="android:statusBarColor">@color/oled_black</item>
+                <item name="android:navigationBarColor">@color/oled_black</item>
+            </style>
+            <style name="Theme.AetherOLED.Fullscreen" parent="Theme.AetherOLED" />
+        </resources>
+        EOF
+
+        # Fail-Proof Manifest (Guaranteed clean AAPT2 linking)
+        cat << 'EOF' > app/src/main/AndroidManifest.xml
+        <?xml version="1.0" encoding="utf-8"?>
+        <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+            <uses-permission android:name="android.permission.INTERNET" />
+            <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+            <uses-permission android:name="android.permission.VIBRATE" />
+            <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+
+            <application
+                android:allowBackup="true"
+                android:icon="@drawable/ic_concentric_logo"
+                android:label="@string/app_name"
+                android:roundIcon="@drawable/ic_concentric_logo"
+                android:supportsRtl="true"
+                android:theme="@style/Theme.AetherOLED">
+
+                <activity
+                    android:name=".MainActivity"
+                    android:exported="true"
+                    android:configChanges="orientation|screenSize|keyboardHidden"
+                    android:theme="@style/Theme.AetherOLED">
+                    <intent-filter>
+                        <action android:name="android.intent.action.MAIN" />
+                        <category android:name="android.intent.category.LAUNCHER" />
+                    </intent-filter>
+                </activity>
+
+                <receiver
+                    android:name=".widget.AetherWidgetProvider"
+                    android:exported="true"
+                    android:label="@string/widget_name">
+                    <intent-filter>
+                        <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                        <action android:name="android.intent.action.BATTERY_CHANGED" />
+                        <action android:name="com.aether.monitor.ACTION_CYCLE_SPEED" />
+                    </intent-filter>
+                    <meta-data
+                        android:name="android.appwidget.provider"
+                        android:resource="@xml/widget_telemetry_info" />
+                </receiver>
+
+                <service
+                    android:name=".widget.AetherAnimationService"
+                    android:exported="false" />
+            </application>
+        </manifest>
+        EOF
 
         # Gradle Configuration
         cat << 'EOF' > settings.gradle.kts
@@ -78,8 +138,8 @@ jobs:
                 applicationId = "com.aether.monitor"
                 minSdk = 26
                 targetSdk = 34
-                versionCode = 5
-                versionName = "1.0.4"
+                versionCode = 6
+                versionName = "1.0.5"
             }
 
             buildTypes {
