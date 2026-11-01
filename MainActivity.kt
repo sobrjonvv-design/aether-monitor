@@ -17,12 +17,11 @@ import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.Toast
-import com.aether.monitor.widget.AetherAnimationService
 import com.aether.monitor.widget.AetherWidgetProvider
 
 /**
  * AETHER // Native Host Activity
- * Hardware-accelerated OLED WebView & Home Screen Widget Pinning Bridge
+ * Hardware-accelerated OLED WebView & Telemetry Widget Bridge
  */
 class MainActivity : Activity() {
 
@@ -61,39 +60,14 @@ class MainActivity : Activity() {
         webView.webViewClient = WebViewClient()
         webView.webChromeClient = WebChromeClient()
 
-        loadFromIntent(intent)
-    }
-
-    override fun onNewIntent(intent: Intent?) {
-        super.onNewIntent(intent)
-        if (intent != null) {
-            setIntent(intent)
-            loadFromIntent(intent)
-        }
-    }
-
-    private fun loadFromIntent(intent: Intent?) {
-        val zenGameId = intent?.getIntExtra("zen_game_id", 0) ?: 0
-        if (zenGameId > 0) {
-            webView.loadUrl("file:///android_asset/www/index.html?zen=$zenGameId&fullscreen=1")
-        } else {
-            webView.loadUrl("file:///android_asset/www/index.html")
-        }
+        webView.loadUrl("file:///android_asset/www/index.html")
     }
 
     inner class AndroidBridge(private val ctx: Context) {
         @JavascriptInterface
-        fun pinActiveGame(gameId: Int, gameName: String) {
+        fun refreshWidget() {
             runOnUiThread {
                 try {
-                    // 1. Save active game to SharedPreferences for the Native Widget
-                    val prefs = ctx.getSharedPreferences("aether_prefs", Context.MODE_PRIVATE)
-                    prefs.edit()
-                        .putInt("pinned_zen_id", gameId)
-                        .putString("pinned_zen_name", gameName)
-                        .apply()
-
-                    // 2. Refresh active AETHER widgets on home screen
                     val appWidgetManager = AppWidgetManager.getInstance(ctx)
                     val component = ComponentName(ctx, AetherWidgetProvider::class.java)
                     val ids = appWidgetManager.getAppWidgetIds(component)
@@ -101,54 +75,15 @@ class MainActivity : Activity() {
                         AetherWidgetProvider.updateAppWidget(ctx, appWidgetManager, id)
                     }
 
-                    // 3. Start live animation service if it's one of the animated games
-                    if (AetherWidgetProvider.isAnimatedGame(gameId)) {
-                        AetherWidgetProvider.startAnimationService(ctx)
-                    }
-
-                    // 4. Request native Android 8.0+ Home Screen Widget Pinning
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                         if (appWidgetManager.isRequestPinAppWidgetSupported) {
                             appWidgetManager.requestPinAppWidget(component, null, null)
-                            val animText = if (AetherWidgetProvider.isAnimatedGame(gameId)) "с живой OLED-анимацией" else "в статичном режиме"
-                            Toast.makeText(
-                                ctx,
-                                "Виджет #$gameId ($gameName) $animText готов к добавлению!",
-                                Toast.LENGTH_SHORT
-                            ).show()
-                        } else {
-                            Toast.makeText(
-                                ctx,
-                                "Виджет обновлен! Зажмите пустой экран -> Виджеты -> AETHER",
-                                Toast.LENGTH_LONG
-                            ).show()
                         }
-                    } else {
-                        Toast.makeText(
-                            ctx,
-                            "Виджет AETHER обновлен с игрой #$gameId!",
-                            Toast.LENGTH_LONG
-                        ).show()
                     }
+                    Toast.makeText(ctx, "Виджет телеметрии AETHER обновлен!", Toast.LENGTH_SHORT).show()
                 } catch (e: Exception) {
                     e.printStackTrace()
                 }
-            }
-        }
-
-        @JavascriptInterface
-        fun setWidgetSpeed(speed: Float) {
-            runOnUiThread {
-                try {
-                    val prefs = ctx.getSharedPreferences("aether_prefs", Context.MODE_PRIVATE)
-                    prefs.edit().putFloat("widget_speed", speed).apply()
-                    val appWidgetManager = AppWidgetManager.getInstance(ctx)
-                    val component = ComponentName(ctx, AetherWidgetProvider::class.java)
-                    val ids = appWidgetManager.getAppWidgetIds(component)
-                    for (id in ids) {
-                        AetherWidgetProvider.updateAppWidget(ctx, appWidgetManager, id)
-                    }
-                } catch (e: Exception) {}
             }
         }
     }
